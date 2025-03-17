@@ -42,7 +42,7 @@ const FacebookAuth = () => {
         callback={responseFacebook}
         cssClass="facebook-button"
         icon="fa-facebook"
-        textButton="Login with Facebook"
+        textButton="Facebook Login"
       />
     </div>
   );

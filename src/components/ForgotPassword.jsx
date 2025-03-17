@@ -32,7 +32,7 @@ const ForgotPassword = () => {
         <img src={img} alt="Background" className="forgot-img" />
         <div className="forgot-overlay-text">
           <h1>Reset Password</h1>
-          <p>Enter your email to retrieve your password.</p>
+          <p className="p-text">Enter your email to retrieve your password.</p>
         </div>
       </div>
 

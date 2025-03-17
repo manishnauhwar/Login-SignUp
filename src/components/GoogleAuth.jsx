@@ -1,6 +1,7 @@
 import React from "react";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { useNavigate } from "react-router-dom";
+import "../App.css";
 
 const GoogleAuth = () => {
   const navigate = useNavigate();
@@ -20,9 +21,8 @@ const GoogleAuth = () => {
         await fetch("http://localhost:5000/users", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: userData.email, name: userData.name })
+          body: JSON.stringify({ email: userData.email, name: userData.name }),
         });
-
         navigate("/login");
       }
     } catch (error) {
@@ -37,7 +37,19 @@ const GoogleAuth = () => {
   return (
     <GoogleOAuthProvider clientId="1017771155951-5ioboilkq21lo4pflqg3kqof3eevdaed.apps.googleusercontent.com">
       <div className="google-login-container">
-        <GoogleLogin onSuccess={handleSuccess} onError={handleError} className="google-button" />
+        <GoogleLogin
+          onSuccess={handleSuccess}
+          onError={handleError}
+          render={(renderProps) => (
+            <button
+              onClick={renderProps.onClick}
+              disabled={renderProps.disabled}
+              className="custom-google-button"
+            >
+              Sign in with Google
+            </button>
+          )}
+        />
       </div>
     </GoogleOAuthProvider>
   );

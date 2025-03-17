@@ -1,4 +1,3 @@
-// src/utils/auth.js
 export const setAuthToken = ( token: string) => {
     localStorage.setItem("authToken", token);
   };
@@ -15,4 +14,3 @@ export const setAuthToken = ( token: string) => {
     localStorage.removeItem("authToken");
     window.location.href = "/"; 
   };
-  

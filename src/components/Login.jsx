@@ -41,7 +41,7 @@ const Login = () => {
 
       if (user) {
         localStorage.setItem("authToken", email);
-        navigate("/home");
+        navigate("/dashboard");
       } else {
         setEmailError("Invalid email or password.");
       }
@@ -100,7 +100,7 @@ const Login = () => {
         </button>
 
         <div className="social-login-container">
-          <GoogleAuth className="google-button" />
+          <GoogleAuth  />
           <FacebookAuth />
         </div>
       </div>
