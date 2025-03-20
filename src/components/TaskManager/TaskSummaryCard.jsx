@@ -1,11 +1,13 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Doughnut } from "react-chartjs-2";
 import { Chart, ArcElement, Tooltip } from "chart.js";
 import "./TaskSummaryCard.css";
+import { ThemeContext } from "../../utils/ThemeContext";
 
 Chart.register(ArcElement, Tooltip);
 
 const TaskSummaryCard = ({ totalTasks, overdueTasks, completedTasks, tasksForToday }) => {
+  const { theme } = useContext(ThemeContext);
   const data = {
     datasets: [
       {
@@ -14,16 +16,14 @@ const TaskSummaryCard = ({ totalTasks, overdueTasks, completedTasks, tasksForTod
       },
     ],
   };
-
   const options = {
     cutout: "70%",
     responsive: true,
     maintainAspectRatio: false,
     plugins: { legend: { display: false }, tooltip: { enabled: false } },
   };
-
   return (
-    <div className="task-summary-card">
+    <div className="task-summary-card" data-theme={theme}>
       <div className="task-summary-item">
         <h3>Total Tasks</h3>
         <p>{totalTasks}</p>

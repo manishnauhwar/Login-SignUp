@@ -1,0 +1,58 @@
+.cards-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
+
+.user-card, .team-card, .tasks-card {
+  flex: 1;
+  min-width: 300px;
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease-in-out;
+}
+
+.user-card:hover, .team-card:hover, .tasks-card:hover {
+  transform: scale(1.02);
+}
+
+.user-card h2, .team-card h2, .tasks-card h2 {
+  font-size: 22px;
+  margin-bottom: 15px;
+  color: #2c3e50;
+  text-align: center;
+  font-weight: 600;
+}
+
+.user-card p, .team-card p, .tasks-card li {
+  font-size: 16px;
+  color: #555;
+  margin: 8px 0;
+  padding: 5px;
+  border-left: 4px solid #3498db;
+  background: #ecf5ff;
+  border-radius: 5px;
+  padding-left: 10px;
+}
+
+.team-card p {
+  border-left-color: #e67e22;
+  background: #fff5e6;
+}
+
+.tasks-card li {
+  border-left-color: #7a295b;
+  background: #f8daed;
+  list-style: none;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+  .cards-container {
+    flex-direction: column;
+    align-items: center;
+  }
+}

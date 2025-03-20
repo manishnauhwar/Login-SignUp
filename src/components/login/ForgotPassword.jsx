@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import img from "../assets/img.webp";
+import img from "../../assets/img.webp";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");

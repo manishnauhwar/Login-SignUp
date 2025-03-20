@@ -1,0 +1,76 @@
+.team-group {
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  flex: 1 1 calc(33.33% - 40px);
+  min-width: 320px;
+  max-width: 450px;
+  overflow: hidden;
+  border: 1px solid #ddd;
+  transition: background-color 0.3s ease-in-out;
+}
+
+.team-group:hover {
+  background: #f0f8ff;
+}
+
+.team-name {
+  font-size: 20px;
+}
+
+.team-manager {
+  font-size: 14px;
+}
+
+/* Team Table Styling */
+.team-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.team-table-header {
+  background: #007bff;
+  color: white;
+}
+
+.team-table-cell {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: left;
+  font-size: 14px;
+  word-break: break-word;
+  overflow: hidden;
+}
+
+.team-table-row:nth-child(even) {
+  background: #f8f9fa;
+}
+
+@media (max-width: 768px) {
+  .team-table-cell {
+    font-size: 12px;
+    padding: 6px;
+  }
+
+  .team-name {
+    font-size: 16px;
+  }
+}
+
+/* Team Button */
+.team-button {
+  background: #007bff;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin: 10px 20px;
+  max-width: 100px;
+}
+
+.team-button:hover {
+  background: #0056b3;
+}

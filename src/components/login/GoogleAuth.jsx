@@ -1,7 +1,7 @@
 import React from "react";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { useNavigate } from "react-router-dom";
-import "../App.css";
+import "../../App.css";
 
 const GoogleAuth = () => {
   const navigate = useNavigate();
