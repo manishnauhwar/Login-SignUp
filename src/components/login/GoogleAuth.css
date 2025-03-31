@@ -1,0 +1,30 @@
+/*.google-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ffffff;
+  color: #555;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  height: 40px;
+  font-weight: bold;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 100%; 
+  max-width: 250px;
+}
+
+.google-button:hover {
+  background-color: #f1f1f1;
+  transform: scale(1.05);
+}
+
+.google-button .fa-google {
+  margin-right: 10px;
+  font-size: 20px;
+  color: #db4437;
+}
+*/

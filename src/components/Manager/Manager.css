@@ -1,0 +1,107 @@
+.manager-card {
+  background: #ffffff;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 300px;
+}
+
+.manager-card h2 {
+  font-size: 18px;
+  margin-bottom: 10px;
+  color: #2c3e50;
+  text-align: center;
+  font-weight: 600;
+}
+
+.manager-card p {
+  font-size: 14px;
+  color: #555;
+  margin: 5px 0;
+  padding: 5px;
+  border-left: 4px solid #3498db;
+  background: #ecf5ff;
+  border-radius: 5px;
+  padding-left: 10px;
+}
+
+/* Wrapped Sections */
+.wrapped-section {
+  background: #ffffff;
+  padding: 20px;
+  margin-top: 10px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease-in-out;
+}
+
+.wrapped-section:hover {
+  transform: translateY(-3px);
+}
+
+.wrapped-section h2 {
+  font-size: 20px;
+  color: #2c3e50;
+  font-weight: 700;
+  margin-bottom: 15px;
+}
+
+/* Assigned Tasks */
+.task-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  max-height: 130px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+/* Team Section */
+.team-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  max-height: 140px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .wrapped-section {
+    padding: 15px;
+  }
+
+  .task-container {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    max-height: unset;
+  }
+
+  .task-card {
+    width: auto;
+    min-width: 250px;
+  }
+
+  .team-container {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar-open {
+    margin-left: 0;
+  }
+
+  .team-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .team-card {
+    width: 100%;
+    max-width: 280px;
+  }
+}

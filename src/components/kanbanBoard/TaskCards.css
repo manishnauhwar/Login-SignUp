@@ -1,0 +1,125 @@
+.task-cards {
+  background-color: white;
+  border-radius: 6px;
+  padding: 8px;
+  margin-bottom: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: grab;
+  border: 1px solid #e9ecef;
+  width: 100%;
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Different background colors for task cards */
+.task-cards:nth-child(3n+1) {
+  background-color: #e3f2fd !important;
+}
+
+.task-cards:nth-child(3n+2) {
+  background-color: #fff3e0 !important;
+}
+
+.task-cards:nth-child(3n+3) {
+  background-color: #e8f5e9 !important;
+}
+
+.task-cards:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.task-cards h3 {
+  margin: 0;
+  font-size: 13px;
+  color: #212529;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.task-cards p {
+  margin: 0;
+  font-size: 11px;
+  color: #6c757d;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  line-height: 1.2;
+}
+
+.task-cards strong {
+  color: #495057;
+  font-weight: 500;
+  min-width: 45px;
+  font-size: 11px;
+}
+
+.task-cards .priority-badge {
+  padding: 1px 4px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.task-cards .due-date {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  color: #dc3545;
+  font-size: 10px;
+  margin-top: auto;
+}
+
+.task-cards .due-date::before {
+  content: "📅";
+  font-size: 11px;
+}
+
+/* Dark theme styles */
+[data-theme="dark"] .task-cards {
+  background: linear-gradient(135deg, #2d3436 0%, #353b48 100%) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .task-cards:nth-child(3n+1) {
+  background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%) !important;
+}
+
+[data-theme="dark"] .task-cards:nth-child(3n+2) {
+  background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%) !important;
+}
+
+[data-theme="dark"] .task-cards:nth-child(3n+3) {
+  background: linear-gradient(135deg, #1565c0 0%, #1976d2 100%) !important;
+}
+
+[data-theme="dark"] .task-cards:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .task-cards h3 {
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .task-cards p {
+  color: #dfe6e9;
+}
+
+[data-theme="dark"] .task-cards strong {
+  color: #b2bec3;
+}
+
+[data-theme="dark"] .task-cards .due-date {
+  color: #ff7675;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}

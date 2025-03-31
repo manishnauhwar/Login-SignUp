@@ -1,0 +1,292 @@
+.add-task-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px;
+  background: #eef2f7;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.task-input,
+.task-select,
+.task-button {
+  padding: 12px;
+  font-size: 15px;
+  border: 1px solid #d1d9e6;
+  border-radius: 8px;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.task-input {
+  width: 30%;
+}
+
+.task-select {
+  width: 20%;
+}
+
+.task-button {
+  width: 15%;
+  background: #007bff;
+  color: white;
+  cursor: pointer;
+  border: none;
+  font-weight: bold;
+}
+
+.task-button:hover {
+  background: #0056b3;
+}
+
+.task-button.disabled {
+  background: #adb5bd;
+  cursor: not-allowed;
+}
+
+/* Table Styling */
+.table-box {
+  width: 100%;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 50px;
+  overflow-y: auto;
+  max-height: 400px;
+  position: relative;
+}
+
+.due-date-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.due-date-table thead {
+  position: sticky;
+  top: 0;
+  background: #343a40;
+  color: white;
+  z-index: 100; 
+}
+
+.due-date-table th {
+  background: #343a40;
+  padding: 14px;
+  border: 1px solid #ddd;
+  text-align: center;
+  font-size: 15px;
+  z-index: 100; 
+}
+
+.due-date-table th,
+.due-date-table td {
+  padding: 14px;
+  border: 1px solid #ddd;
+  text-align: center;
+  font-size: 15px;
+}
+
+.due-date-table tbody tr:nth-child(even) {
+  background: #f8f9fa;
+}
+
+.due-date-table tbody tr:nth-child(odd) {
+  background: #e9ecef;
+}
+
+.due-date-table tbody tr:hover {
+  background: #d6d8db;
+  transition: 0.3s;
+}
+
+/* Buttons */
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.due-date-table button {
+  padding: 8px 12px;
+  margin: 2px;
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: 0.3s;
+  font-weight: bold;
+}
+
+.view-btn {
+  background: #17a2b8;
+  color: white;
+}
+
+.edit-btn {
+  background: #ffb700;
+  color: black;
+}
+
+.delete-btn {
+  background: #dc3545;
+  color: white;
+}
+
+.view-btn:hover {
+  background: #138496;
+}
+
+.edit-btn:hover {
+  background: #e0a800;
+}
+
+.delete-btn:hover {
+  background: #c82333;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .add-task-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .task-input,
+  .task-select,
+  .task-button {
+    width: 95%;
+    margin-bottom: 10px;
+  }
+
+  .due-date-table th,
+  .due-date-table td {
+    padding: 10px;
+    font-size: 14px;
+  }
+}
+
+/* Modal Styling */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.modal-content {
+  background: white;
+  width: 45%;
+  max-width: 500px;
+  padding: 25px;
+  border-radius: 12px;
+  position: relative;
+  box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.3);
+}
+
+.modal-content h2 {
+  margin-bottom: 15px;
+  color: #343a40;
+  text-align: center;
+}
+
+.modal-content input,
+.modal-content select {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 15px;
+}
+
+.save-btn {
+  width: 100%;
+  padding: 10px;
+  background: #28a745;
+  color: white;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 6px;
+  font-weight: bold;
+}
+
+.save-btn:hover {
+  background: #218838;
+}
+
+.modal-close-btn {
+  position: absolute;
+  width: 35px;
+  top: 10px;
+  right: 15px;
+  background: transparent;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.modal-close-btn:hover {
+  color: #dc3545;
+}
+.comment-input {
+  width: 100%;
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 14px;
+  border: none;
+}
+
+.comment-input:focus {
+  outline: none;
+}
+.custom-toggle {
+  width: 60px;
+  height: 30px;
+  border-radius: 30px;
+  display: flex;
+  align-items: center;
+  padding: 3px;
+  cursor: pointer;
+  transition: background 0.3s ease-in-out;
+  position: relative;
+}
+
+.custom-toggle.completed {
+  background-color: #28a745; 
+}
+
+.custom-toggle.pending {
+  background-color: #dc3545; 
+}
+
+.toggle-circle {
+  width: 26px;
+  height: 24px;
+  background-color: white;
+  border-radius: 50%;
+  position: absolute;
+  transition: transform 0.3s ease-in-out;
+}
+
+.custom-toggle.completed .toggle-circle {
+  transform: translateX(30px);
+}
+
+.custom-toggle.pending .toggle-circle {
+  transform: translateX(0px);
+}
+

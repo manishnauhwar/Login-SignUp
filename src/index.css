@@ -1,0 +1,213 @@
+[data-theme="dark"] body {
+  background: linear-gradient(135deg, #121212 0%, #121212 100%);
+  color: #e0e0e0;
+}
+[data-theme="dark"] .home-container {
+  background: #121212;
+}
+[data-theme="dark"] .main-content {
+  background: #121212;
+  color: #e0e0e0;
+}
+[data-theme="dark"] .dashboard-content {
+  background: #121212;
+  color: #e0e0e0;
+}
+[data-theme="dark"] .previousyear > * {
+  background: #2c2c2c;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.7);
+  color: #e0e0e0;
+}
+[data-theme="dark"] .add-task-container {
+  background: #2c2c2c;
+  border: 1px solid #444;
+}
+[data-theme="dark"] .task-input,
+[data-theme="dark"] .task-select,
+[data-theme="dark"] .task-button {
+  background: #2c2c2c;
+  border: 1px solid #444;
+  color: #e0e0e0;
+}
+[data-theme="dark"] .table-box {
+  background: #1e1e1e;
+  color: #e0e0e0;
+}
+[data-theme="dark"] .due-date-table thead {
+  background: #333;
+  color: #e0e0e0;
+}
+[data-theme="dark"] .due-date-table th,
+[data-theme="dark"] .due-date-table td {
+  border: 1px solid #444;
+}
+[data-theme="dark"] .due-date-table tbody tr:nth-child(even) {
+  background: #2c2c2c;
+}
+[data-theme="dark"] .due-date-table tbody tr:nth-child(odd) {
+  background: #1e1e1e;
+}
+[data-theme="dark"] .due-date-table tbody tr:hover {
+  background: #333;
+}
+[data-theme="dark"] .modal-overlay {
+  background: rgba(0, 0, 0, 0.7);
+}
+[data-theme="dark"] .modal-content {
+  background: #1e1e1e;
+  color: #e0e0e0;
+  border: 1px solid #444;
+}
+[data-theme="dark"] .modal-content input,
+[data-theme="dark"] .modal-content textarea,
+[data-theme="dark"] .modal-content select {
+  background: #2c2c2c;
+  border: 1px solid #444;
+  color: #e0e0e0;
+}
+[data-theme="dark"] .save-btn {
+  background: #28a745;
+}
+[data-theme="dark"] .modal-close-btn {
+  color: #e0e0e0;
+}
+[data-theme="dark"] .comment-input {
+  background: #2c2c2c;
+  border: 1px solid #444;
+  color: #e0e0e0;
+}
+[data-theme="dark"] .custom-toggle.completed {
+  background-color: #28a745;
+}
+[data-theme="dark"] .custom-toggle.pending {
+  background-color: #dc3545;
+}
+[data-theme="dark"] .manager-card {
+  background: #2c2c2c;
+  color: #e0e0e0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.7);
+}
+[data-theme="dark"] .manager-card h2 {
+  color: #e0e0e0;
+}
+[data-theme="dark"] .manager-card p {
+  background: #333;
+  border-left: 4px solid #007bff;
+  color: #e0e0e0;
+}
+[data-theme="dark"] .wrapped-section {
+  background: #2c2c2c;
+  color: #e0e0e0;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.7);
+}
+[data-theme="dark"] .wrapped-section h2 {
+  color: #e0e0e0;
+}
+[data-theme="dark"] .team-container {
+  background: #1e1e1e;
+}
+[data-theme="dark"] .task-card {
+  background: #2c2c2c;
+  color: #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+}
+[data-theme="dark"] .task-card p {
+  background: #333;
+  color: #e0e0e0;
+  border-left: 4px solid #007bff;
+}
+[data-theme="dark"] .member-card {
+  background: #2c2c2c;
+  color: #e0e0e0;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.7);
+}
+[data-theme="dark"] .member-card h3 {
+  color: #e0e0e0;
+}
+[data-theme="dark"] .member-card p {
+  background: #333;
+  border-left: 4px solid #0f6e55;
+  color: #e0e0e0;
+}
+[data-theme="dark"] .top-nav {
+  background: #1a1a1a;
+  box-shadow: 0px 4px 6px rgba(0,0,0,0.7);
+}
+[data-theme="dark"] .search-bar {
+  background: #2c2c2c;
+  box-shadow: 0px 2px 4px rgba(0,0,0,0.7);
+}
+[data-theme="dark"] .nav-btn.logout {
+  background-color: #138496;
+}
+[data-theme="dark"] .profile-btn {
+  background-color: #2c2c2c;
+}
+[data-theme="dark"] .notification-dropdown {
+  background: #2c2c2c;
+  border: 1px solid #444;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.7);
+}
+[data-theme="dark"] .notification-dropdown li {
+  border-bottom: 1px solid #444;
+  color: #e0e0e0;
+}
+[data-theme="dark"] .notification-dropdown li.read {
+  color: #aaa;
+}
+[data-theme="dark"] .sort-container {
+  background: #2c2c2c;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.7);
+}
+[data-theme="dark"] .sort-select,
+[data-theme="dark"] .sort-button,
+[data-theme="dark"] .filter-select {
+  background: #2c2c2c;
+  color: #e0e0e0;
+  border: 1px solid #444;
+}
+[data-theme="dark"] .sort-button {
+  background: #1dacd7;
+}
+[data-theme="dark"] .sort-button:hover {
+  background: #4796e5;
+}
+[data-theme="dark"] .sort-button:disabled {
+  background: #444;
+  color: #7e7e7e;
+}
+[data-theme="dark"] .settings-container {
+  background: #1e1e1e;
+  color: #e0e0e0;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.7);
+}
+[data-theme="dark"] .settings-nav,
+[data-theme="dark"] .settings-item,
+[data-theme="dark"] label {
+  color: #e0e0e0;
+}
+[data-theme="dark"] select {
+  background: #2c2c2c;
+  color: #e0e0e0;
+  border: 1px solid #444;
+}
+[data-theme="dark"] .unassigned-tasks {
+  background: #2c2c2c;
+  border: 1px solid #444;
+}
+[data-theme="dark"] .unassigned-tasks .task-card {
+  background: #2c2c2c;
+  border: 1px solid #444;
+  color: #e0e0e0;
+}
+[data-theme="dark"] .modal-main {
+  background: rgba(0,0,0,0.7);
+}
+[data-theme="dark"] .modal-container {
+  background: #1e1e1e;
+  color: #e0e0e0;
+  border: 1px solid #444;
+}
+
+
+
