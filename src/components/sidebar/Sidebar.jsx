@@ -34,14 +34,15 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
     const roleItems = {
       admin: [
-        { path: '/users', icon: <FaUsers className="icon" />, text: 'Users' },
+        // { path: '/users', icon: <FaUsers className="icon" />, text: 'Users' },
         { path: '/team', icon: <RiTeamLine className="icon" />, text: 'Admin Panel' }
         
       ],
       manager: [
         { path: '/manager', icon: <FaUserCog className="icon" />, text: 'Manager Panel' }
       ],
-      user: [ { path: '/users', icon: <FaUsers className="icon" />, text: 'Users' }
+      user: [
+         { path: '/users', icon: <FaUsers className="icon" />, text: 'Users' }
         
       ]
     };

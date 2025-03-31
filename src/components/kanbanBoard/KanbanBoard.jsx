@@ -73,7 +73,17 @@ const KanbanBoard = () => {
         return;
       }
 
-      if (userRole === "user" && task.assignedTo !== userId) {
+      if (userRole === "admin" || userRole === "manager") {
+        await axiosInstance.patch(`/tasks/${taskId}`, { status: newStatus });
+        setTasks((prevTasks) =>
+          prevTasks.map((task) =>
+            task._id === taskId ? { ...task, status: newStatus } : task
+          )
+        );
+        return;
+      }
+
+      if (task.assignedTo !== userId) {
         console.error("User is not assigned to this task");
         return;
       }
@@ -134,14 +144,21 @@ const KanbanBoard = () => {
       },
       collect: (monitor) => ({ isOver: !!monitor.isOver() }),
     }));
+
+    const filteredTasks = tasks.filter((task) => {
+      const statusMatch = task.status === statusFilter;
+      if (userRole === "user") {
+        return statusMatch && task.assignedTo === userId;
+      }
+      return statusMatch;
+    });
+
     return (
       <div className={`column ${isOver ? 'column-over' : ''}`} ref={drop}>
         <h3>{title}</h3>
-        {tasks
-          .filter((task) => task.status === statusFilter)
-          .map((task) => (
-            <TaskCards key={task._id} task={task} />
-          ))}
+        {filteredTasks.map((task) => (
+          <TaskCards key={task._id} task={task} />
+        ))}
       </div>
     );
   };

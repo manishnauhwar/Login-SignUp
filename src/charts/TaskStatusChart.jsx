@@ -7,7 +7,7 @@ Chart.register(ArcElement, Tooltip, Legend);
 const TaskStatusChart = ({ tasks }) => {
   const completed = tasks.filter((t) => t.status === "Completed").length;
   const todo = tasks.filter((t) => t.status === "To Do").length;
-  const inProgress = tasks.filter((t) => t.status === "In Progress").length;
+  const inProgress = tasks.filter((t) => t.status === "In progress").length;
 
   const data = {
     labels: ["Completed", "To Do", "In Progress"],
