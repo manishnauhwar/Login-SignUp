@@ -29,7 +29,7 @@ const TaskSummaryCard = ({ totalTasks, overdueTasks, completedTasks, tasksForTod
         <p>{totalTasks}</p>
       </div>
       <div className="task-summary-item overdue">
-        <h3>Overdue Tasks</h3>
+        <h3>Due Tasks</h3>
         <p>{overdueTasks}</p>
       </div>
       <div className="task-summary-item completed">

@@ -8,6 +8,7 @@ import DueDateTableWithModal from '../Dashboard/DueDateModel';
 import { logout } from '../../utils/auth';
 import SortTasks from '../TaskManager/SortTasks';
 import { ThemeContext } from "../../utils/ThemeContext";
+import axiosInstance from '../../utils/axiosInstance';
 
 const TaskManagement = () => {
   const navigate = useNavigate();
@@ -22,13 +23,29 @@ const TaskManagement = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('http://localhost:5000/tasks');
-        const data = await response.json();
-        setTasks(data);
-        setOriginaltasks(data);
-        setAllTasks(data);
+        const response = await axiosInstance.get('/tasks');
+        const data = response.data || [];
+
+        const transformedTasks = data.map(task => ({
+          id: task._id,
+          title: task.title,
+          description: task.description,
+          status: task.status,
+          priority: task.priority,
+          dueDate: new Date(task.dueDate).toISOString().split('T')[0],
+          createdAt: new Date(task.createdAt).toISOString().split('T')[0],
+          assignedTo: task.assignedTo || '',
+          userId: task.userId
+        }));
+
+        setTasks(transformedTasks);
+        setOriginaltasks(transformedTasks);
+        setAllTasks(transformedTasks);
       } catch (error) {
         console.error('Error fetching tasks:', error);
+        setTasks([]);
+        setOriginaltasks([]);
+        setAllTasks([]);
       } finally {
         setLoading(false);
       }
@@ -39,8 +56,8 @@ const TaskManagement = () => {
   useEffect(() => {
     const filteredTasks = searchQuery
       ? allTasks.filter((task) =>
-          task.title.toLowerCase().includes(searchQuery.toLowerCase())
-        )
+        task.title.toLowerCase().includes(searchQuery.toLowerCase())
+      )
       : allTasks;
     setTasks(filteredTasks);
   }, [searchQuery, allTasks]);

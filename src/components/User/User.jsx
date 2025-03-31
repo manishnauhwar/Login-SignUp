@@ -6,46 +6,37 @@ import { useNavigate } from "react-router-dom";
 import Main from "../Title/Main";
 import "./User.css";
 import { ThemeContext } from "../../utils/ThemeContext";
+import axiosInstance from "../../utils/axiosInstance";
 
 const User = () => {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [teams, setTeams] = useState([]);
-  const [user, setUser] = useState(null);
-  const [userTeam, setUserTeam] = useState(null);
   const [tasks, setTasks] = useState([]);
   const { theme } = useContext(ThemeContext);
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const res = await fetch("http://localhost:5000/teams");
-        const data = await res.json();
-        if (data && Array.isArray(data)) {
-          setTeams(data);
-          const loggedInUserId = "U6";
-          const foundTeam = data.find(team => team.members.some(member => member.id === loggedInUserId));
-          if (foundTeam) {
-            const foundUser = foundTeam.members.find(member => member.id === loggedInUserId);
-            setUser(foundUser);
-            setUserTeam(foundTeam);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching teams:", error);
-      }
-    };
-    fetchUserData();
-  }, []);
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
 
   useEffect(() => {
     const fetchTasks = async () => {
-      if (!user) return;
       try {
-        const res = await fetch("http://localhost:5000/tasks");
-        const data = await res.json();
-        if (data && Array.isArray(data)) {
-          const userTasks = data.filter(task => task.assignedTo === user.id);
+        const userData = JSON.parse(localStorage.getItem("user"));
+        if (!userData) {
+          navigate("/login");
+          return;
+        }
+
+        const tasksResponse = await axiosInstance.get("/tasks");
+        const tasksData = tasksResponse.data;
+
+        if (tasksData && Array.isArray(tasksData)) {
+          const userTasks = tasksData.filter(task => task.assignedTo === userData.id);
           setTasks(userTasks);
         }
       } catch (error) {
@@ -53,7 +44,7 @@ const User = () => {
       }
     };
     fetchTasks();
-  }, [user]);
+  }, [navigate]);
 
   const handleLogout = () => {
     logout();
@@ -67,36 +58,30 @@ const User = () => {
         <Navbar handleLogout={handleLogout} isSidebarOpen={isSidebarOpen} />
         <Main />
         <div className="cards-container">
-          {user && (
-            <div className="user-card">
-              <h2>User Details</h2>
-              <p><strong>ID:</strong> {user.id}</p>
-              <p><strong>Name:</strong> {user.name}</p>
-              <p><strong>Email:</strong> {user.email}</p>
-              <p><strong>Role:</strong> {user.role}</p>
-            </div>
-          )}
-          {userTeam && (
-            <div className="team-card">
-              <h2>Team Details</h2>
-              <p><strong>Team Name:</strong> {userTeam.name}</p>
-              <p><strong>Manager:</strong> {userTeam.manager.name}</p>
-            </div>
-          )}
           <div className="tasks-card">
-            <h2>Tasks To Do</h2>
+            <h2>My Tasks</h2>
             {tasks.length > 0 ? (
-              <ul>
+              <ul className="tasks-list">
                 {tasks.map(task => (
-                  <li key={task.id}>
-                    <strong>Title:</strong> {task.title} <br />
-                    <strong>Priority:</strong> {task.priority} <br />
-                    <strong>Due Date:</strong> {task.dueDate}
+                  <li key={task._id} className="task-item">
+                    <div className="task-header">
+                      <h3>{task.title}</h3>
+                      <span className={`priority-badge ${task.priority.toLowerCase()}`}>
+                        {task.priority}
+                      </span>
+                    </div>
+                    <p className="task-description">{task.description}</p>
+                    <div className="task-footer">
+                      <span className="due-date">Due: {formatDate(task.dueDate)}</span>
+                      <span className={`status-badge ${task.status.toLowerCase()}`}>
+                        {task.status}
+                      </span>
+                    </div>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p>No tasks assigned.</p>
+              <p className="no-tasks">No tasks assigned to you.</p>
             )}
           </div>
         </div>

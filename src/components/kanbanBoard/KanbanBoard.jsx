@@ -9,12 +9,15 @@ import TaskCards from "./TaskCards";
 import CalendarView from "./CalendarView";
 import { ThemeContext } from "../../utils/ThemeContext";
 import "./KanbanBoard.css";
+import axiosInstance from "../../utils/axiosInstance";
 
 const KanbanBoard = () => {
   const navigate = useNavigate();
   const { theme } = useContext(ThemeContext);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [tasks, setTasks] = useState([]);
+  const [userRole, setUserRole] = useState(null);
+  const [userId, setUserId] = useState(null);
   const [newTaskData, setNewTaskData] = useState({
     title: "",
     description: "",
@@ -31,17 +34,31 @@ const KanbanBoard = () => {
   const [filterDate, setFilterDate] = useState("");
 
   useEffect(() => {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    if (userData) {
+      setUserRole(userData.role);
+      setUserId(userData.id);
+    }
+  }, []);
+
+  useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const res = await fetch("http://localhost:5000/tasks");
-        const data = await res.json();
-        setTasks(data);
+        const response = await axiosInstance.get("/tasks");
+        const allTasksData = response.data;
+
+        if (userRole === "user") {
+          const userTasks = allTasksData.filter(task => task.assignedTo === userId);
+          setTasks(userTasks);
+        } else {
+          setTasks(allTasksData);
+        }
       } catch (error) {
         console.error("Error fetching tasks:", error);
       }
     };
     fetchTasks();
-  }, []);
+  }, [userRole, userId]);
 
   const handleLogout = () => {
     logout();
@@ -49,17 +66,24 @@ const KanbanBoard = () => {
   };
 
   const moveTask = async (taskId, newStatus) => {
-    setTasks((prevTasks) =>
-      prevTasks.map((task) =>
-        task.id === taskId ? { ...task, status: newStatus } : task
-      )
-    );
     try {
-      await fetch(`http://localhost:5000/tasks/${taskId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus }),
-      });
+      const task = tasks.find(task => task._id === taskId);
+      if (!task) {
+        console.error("Task not found");
+        return;
+      }
+
+      if (userRole === "user" && task.assignedTo !== userId) {
+        console.error("User is not assigned to this task");
+        return;
+      }
+
+      await axiosInstance.patch(`/tasks/${taskId}`, { status: newStatus });
+      setTasks((prevTasks) =>
+        prevTasks.map((task) =>
+          task._id === taskId ? { ...task, status: newStatus } : task
+        )
+      );
     } catch (error) {
       console.error("Error updating task status:", error);
     }
@@ -67,34 +91,35 @@ const KanbanBoard = () => {
 
   const addTask = async () => {
     if (!newTaskData.title.trim() || !newTaskData.dueDate.trim()) return;
+
+    const [year, month, day] = newTaskData.dueDate.split('-');
+    const formattedDate = `${day}-${month}-${year}`;
+
     const taskData = {
       ...newTaskData,
-      id: Date.now().toString(),
-      status: "pending",
-      createdAt: new Date().toISOString().split("T")[0]
+      dueDate: formattedDate,
+      status: "To Do",
+      createdAt: new Date().toISOString().split("T")[0],
+      assignedTo: userRole === "user" ? userId : newTaskData.assignedTo
     };
+
     try {
-      const response = await fetch("http://localhost:5000/tasks", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(taskData),
-      });
-      if (!response.ok) {
-        throw new Error("Failed to add task");
+      const response = await axiosInstance.post("/tasks/post", taskData);
+      if (response.data) {
+        setTasks((prev) => [...prev, response.data]);
+        setShowModal(false);
+        setNewTaskData({
+          title: "",
+          description: "",
+          dueDate: "",
+          priority: "Medium",
+          status: "To Do",
+          createdAt: new Date().toISOString().split("T")[0],
+          assignedTo: "",
+          completionTime: "",
+          timeElapsed: 0
+        });
       }
-      setTasks((prev) => [...prev, taskData]);
-      setShowModal(false);
-      setNewTaskData({
-        title: "",
-        description: "",
-        dueDate: "",
-        priority: "Medium",
-        status: "pending",
-        createdAt: new Date().toISOString().split("T")[0],
-        assignedTo: "",
-        completionTime: "",
-        timeElapsed: 0
-      });
     } catch (error) {
       console.error("Error adding task:", error);
     }
@@ -103,16 +128,19 @@ const KanbanBoard = () => {
   const Column = ({ title, statusFilter }) => {
     const [{ isOver }, drop] = useDrop(() => ({
       accept: "TASK",
-      drop: (item) => moveTask(item.id, statusFilter),
+      drop: (item) => {
+        console.log('Dropping task:', item);
+        moveTask(item._id, statusFilter);
+      },
       collect: (monitor) => ({ isOver: !!monitor.isOver() }),
     }));
     return (
-      <div className="column" ref={drop} style={{ background: isOver ? "#f0f0f0" : "white" }}>
+      <div className={`column ${isOver ? 'column-over' : ''}`} ref={drop}>
         <h3>{title}</h3>
         {tasks
-          .filter((task) => task.status.toLowerCase() === statusFilter.toLowerCase())
+          .filter((task) => task.status === statusFilter)
           .map((task) => (
-            <TaskCards key={task.id} task={task} />
+            <TaskCards key={task._id} task={task} />
           ))}
       </div>
     );
@@ -124,20 +152,22 @@ const KanbanBoard = () => {
       <div className={`main-content ${isSidebarOpen ? "sidebar-open" : "sidebar-closed"}`} data-theme={theme}>
         <Navbar handleLogout={handleLogout} isSidebarOpen={isSidebarOpen} />
         <Main />
-        <div className="view-toggle">
-          <button onClick={() => setView("kanban")}>Kanban</button>
-          <button onClick={() => setView("calendar")}>Calendar</button>
-        </div>
-        {view === "kanban" && (
-          <>
+        <div className="kanban-content">
+          <div className="view-toggle">
+            <button onClick={() => setView("kanban")}>Kanban</button>
+            <button onClick={() => setView("calendar")}>Calendar</button>
             <button className="add-task-btn" onClick={() => setShowModal(true)}>+ Add Task</button>
-            <div className="boardContainer">
-              <Column title="To Do" statusFilter="pending" />
-              <Column title="In Progress" statusFilter="in progress" />
-              <Column title="Done" statusFilter="completed" />
-            </div>
-          </>
-        )}
+          </div>
+          {view === "kanban" && (
+            <>
+              <div className="boardContainer">
+                <Column title="To Do" statusFilter="To Do" />
+                <Column title="In Progress" statusFilter="In progress" />
+                <Column title="Done" statusFilter="Completed" />
+              </div>
+            </>
+          )}
+        </div>
         {view === "calendar" && (
           <CalendarView tasks={tasks} setFilterDate={setFilterDate} filterDate={filterDate} onClose={() => setView("kanban")} />
         )}

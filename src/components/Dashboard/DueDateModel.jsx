@@ -1,85 +1,88 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useCallback } from "react";
 import Modal from "react-modal";
 import "./DueDateModel.css";
 import { ThemeContext } from "../../utils/ThemeContext";
-import Navbar from "../Navbar/Navbar";
+import axiosInstance from "../../utils/axiosInstance";
 
-const DueDateModel = ({ tasks, setTasks, searchQuery }) => {
-  const [title, setTitle] = useState("");
-  const [priority, setPriority] = useState("Low");
-  const [dueDate, setDueDate] = useState("");
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedTask, setSelectedTask] = useState(null);
-  const [editMode, setEditMode] = useState(false);
-  const [editedTask, setEditedTask] = useState({});
+const DueDateModel = ({ tasks = [], setTasks, searchQuery, userId, userRole }) => {
+  const [formData, setFormData] = useState({
+    title: "",
+    priority: "Low",
+    dueDate: ""
+  });
+  const [modalState, setModalState] = useState({
+    isOpen: false,
+    selectedTask: null,
+    editMode: false,
+    editedTask: {}
+  });
   const { theme } = useContext(ThemeContext);
 
-  const isDisabled = !title || !dueDate || !priority;
+  const safeTasks = Array.isArray(tasks) ? tasks : [];
+
+  const isDisabled = !formData.title || !formData.dueDate || !formData.priority;
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
   const handleAddTask = async () => {
+    const formattedDate = formData.dueDate.split('-').reverse().join('-');
     const newTask = {
-      id: tasks.length + 1,
-      title,
-      status: "Pending",
-      priority,
-      dueDate,
-      createdAt: new Date().toISOString().split("T")[0],
-      comment: " ",
+      ...formData,
+      description: "No description provided",
+      status: "To Do",
+      dueDate: formattedDate,
+      createdAt: new Date().toISOString().split('T')[0],
+      assignedTo: "",
+      userId: userId || "default"
     };
-
+  
     try {
-      const response = await fetch("http://localhost:5000/tasks", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newTask),
-      });
-      if (!response.ok) throw new Error("Error posting task");
-      const savedTask = await response.json();
-      setTasks([...tasks, savedTask]);
-      setTitle("");
-      setPriority("Low");
-      setDueDate("");
+      const { data } = await axiosInstance.post("/tasks/post", newTask);
+      setTasks(prev => [...(Array.isArray(prev) ? prev : []), { ...newTask, id: data?._id || Date.now().toString() }]);
+      setFormData({ title: "", priority: "Low", dueDate: "" });
     } catch (error) {
       console.error("Error adding task:", error);
+      alert(error.response?.data?.error?.message || "Failed to add task. Please try again.");
     }
   };
-
-  const handleCommentChange = async (taskId, comment) => {
-    try {
-      const response = await fetch(`http://localhost:5000/tasks/${taskId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ comment }),
-      });
-
-      if (!response.ok) throw new Error("Failed to update comment");
-      setTasks(tasks.map((task) => (task.id === taskId ? { ...task, comment } : task)));
-    } catch (error) {
-      console.error("Error updating comment:", error);
-    }
-  };
+  
 
   const handleView = (task) => {
-    setSelectedTask(task);
-    setEditMode(false);
-    setModalOpen(true);
+    setModalState(prev => ({
+      ...prev,
+      isOpen: true,
+      selectedTask: task,
+      editMode: false
+    }));
   };
 
   const handleEdit = (task) => {
-    setEditedTask(task);
-    setEditMode(true);
-    setModalOpen(true);
+    setModalState(prev => ({
+      ...prev,
+      isOpen: true,
+      selectedTask: task,
+      editMode: true,
+      editedTask: {
+        ...task,
+        dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : ''
+      }
+    }));
   };
 
   const handleDelete = async (taskId) => {
+    if (userRole !== 'admin') {
+      alert('Only administrators can delete tasks');
+      return;
+    }
+
+    if (!window.confirm('Are you sure you want to delete this task?')) return;
+
     try {
-      const response = await fetch(`http://localhost:5000/tasks/${taskId}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) throw new Error("Failed to delete task");
-
-      setTasks(tasks.filter((task) => task.id !== taskId));
+      await axiosInstance.delete(`/tasks/${taskId}`);
+      setTasks(prev => prev.filter(task => task.id !== taskId));
     } catch (error) {
       console.error("Error deleting task:", error);
     }
@@ -87,58 +90,88 @@ const DueDateModel = ({ tasks, setTasks, searchQuery }) => {
 
   const handleSave = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/tasks/${editedTask.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editedTask),
-      });
-
-      if (!response.ok) throw new Error("Failed to update task");
-
-      const updatedTask = await response.json();
-
-      setTasks(tasks.map((task) => (task.id === updatedTask.id ? updatedTask : task)));
-      setModalOpen(false);
+      const updatedTask = {
+        ...modalState.editedTask,
+        dueDate: new Date(modalState.editedTask.dueDate).toISOString()
+      };
+      const response = await axiosInstance.put(`/tasks/${modalState.editedTask.id}`, updatedTask);
+      if (response.data) {
+        const transformedTask = {
+          id: response.data._id,
+          title: response.data.title,
+          description: response.data.description,
+          status: response.data.status,
+          priority: response.data.priority,
+          dueDate: new Date(response.data.dueDate).toISOString().split('T')[0],
+          createdAt: new Date(response.data.createdAt).toISOString().split('T')[0],
+          assignedTo: response.data.assignedTo || '',
+          userId: response.data.userId
+        };
+        setTasks(prev => prev.map(task =>
+          task.id === modalState.editedTask.id ? transformedTask : task
+        ));
+        setModalState(prev => ({ ...prev, isOpen: false }));
+      }
     } catch (error) {
       console.error("Error updating task:", error);
     }
   };
 
   const handleToggleStatus = async (taskId, status) => {
-    const newStatus = status === "Completed" ? "Pending" : "Completed";
+    const newStatus = status === "Completed" ? "To Do" : "Completed";
     try {
-      const response = await fetch(`http://localhost:5000/tasks/${taskId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus }),
-      });
-
-      if (!response.ok) throw new Error("Failed to toggle status");
-
-      setTasks(tasks.map((task) => (task.id === taskId ? { ...task, status: newStatus } : task)));
+      const response = await axiosInstance.patch(`/tasks/${taskId}`, { status: newStatus });
+      if (response.data) {
+        setTasks(prev => prev.map(task =>
+          task.id === taskId ? { ...task, status: newStatus } : task
+        ));
+      }
     } catch (error) {
       console.error("Error toggling status:", error);
     }
   };
 
-  const filteredTasks = tasks.filter((task) =>
+  const filteredTasks = safeTasks.filter(task =>
     task.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
     <div className="task-manager-container" data-theme={theme}>
       <div className="add-task-container">
-        <input type="text" placeholder="Task Title" className="task-input" value={title} onChange={(e) => setTitle(e.target.value)} />
-        <input type="date" className="task-input" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
-        <select className="task-select" value={priority} onChange={(e) => setPriority(e.target.value)}>
+        <input
+          type="text"
+          name="title"
+          placeholder="Task Title"
+          className="task-input"
+          value={formData.title}
+          onChange={handleInputChange}
+        />
+        <input
+          type="date"
+          name="dueDate"
+          className="task-input"
+          value={formData.dueDate}
+          onChange={handleInputChange}
+        />
+        <select
+          name="priority"
+          className="task-select"
+          value={formData.priority}
+          onChange={handleInputChange}
+        >
           <option value="Low">Low</option>
           <option value="Medium">Medium</option>
           <option value="High">High</option>
         </select>
-        <button className={`task-button ${isDisabled ? "disabled" : ""}`} onClick={handleAddTask} disabled={isDisabled}>
+        <button
+          className={`task-button ${isDisabled ? "disabled" : ""}`}
+          onClick={handleAddTask}
+          disabled={isDisabled}
+        >
           Add Task
         </button>
       </div>
+
       <div className="table-box">
         <table className="due-date-table">
           <thead>
@@ -149,7 +182,6 @@ const DueDateModel = ({ tasks, setTasks, searchQuery }) => {
               <th>Priority</th>
               <th>Status</th>
               <th>Actions</th>
-              <th>Comment</th>
               <th>Status</th>
             </tr>
           </thead>
@@ -162,24 +194,29 @@ const DueDateModel = ({ tasks, setTasks, searchQuery }) => {
                 <td>{task.priority}</td>
                 <td>{task.status}</td>
                 <td className="action-buttons">
-                  <button onClick={(e) => { e.stopPropagation(); handleEdit(task); }} className="edit-btn">Update</button>
-                  <button onClick={(e) => { e.stopPropagation(); handleDelete(task.id); }} className="delete-btn">Delete</button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleEdit(task); }}
+                    className="edit-btn"
+                  >
+                    Update
+                  </button>
+                  {userRole === 'admin' && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleDelete(task.id); }}
+                      className="delete-btn"
+                    >
+                      Delete
+                    </button>
+                  )}
                 </td>
                 <td>
-                  <input
-                    type="text"
-                    className="comment-input"
-                    value={task.comment || ""}
-                    placeholder="Add a comment"
-                    onClick={(e) => e.stopPropagation()}
-                    onChange={(e) => handleCommentChange(task.id, e.target.value)}
-                  />
-                </td>
-                <td>
-                  <div className={`custom-toggle ${task.status === "Completed" ? "completed" : "pending"}`} onClick={(e) => {
-                    e.stopPropagation();
-                    handleToggleStatus(task.id, task.status);
-                  }}>
+                  <div
+                    className={`custom-toggle ${task.status === "Completed" ? "completed" : "pending"}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleToggleStatus(task.id, task.status);
+                    }}
+                  >
                     <div className="toggle-circle"></div>
                   </div>
                 </td>
@@ -189,26 +226,53 @@ const DueDateModel = ({ tasks, setTasks, searchQuery }) => {
         </table>
       </div>
 
-      <Modal isOpen={modalOpen} onRequestClose={() => setModalOpen(false)} contentLabel="Task Details" overlayClassName="modal-overlay" className="modal-content" ariaHideApp={false}>
-        <button className="modal-close-btn" onClick={() => setModalOpen(false)}>×</button>
-        {editMode ? (
+      <Modal
+        isOpen={modalState.isOpen}
+        onRequestClose={() => setModalState(prev => ({ ...prev, isOpen: false }))}
+        contentLabel="Task Details"
+        overlayClassName="modal-overlay"
+        className="modal-content"
+        ariaHideApp={false}
+      >
+        <button
+          className="modal-close-btn"
+          onClick={() => setModalState(prev => ({ ...prev, isOpen: false }))}
+        >
+          ×
+        </button>
+        {modalState.editMode ? (
           <div>
             <h2>Edit Task</h2>
-            <input type="text" value={editedTask.title} onChange={(e) => setEditedTask({ ...editedTask, title: e.target.value })} />
-            <select value={editedTask.priority} onChange={(e) => setEditedTask({ ...editedTask, priority: e.target.value })}>
+            <input
+              type="text"
+              value={modalState.editedTask.title}
+              onChange={(e) => setModalState(prev => ({
+                ...prev,
+                editedTask: { ...prev.editedTask, title: e.target.value }
+              }))}
+            />
+            <select
+              value={modalState.editedTask.priority}
+              onChange={(e) => setModalState(prev => ({
+                ...prev,
+                editedTask: { ...prev.editedTask, priority: e.target.value }
+              }))}
+            >
               <option value="Low">Low</option>
               <option value="Medium">Medium</option>
               <option value="High">High</option>
             </select>
-            <button onClick={handleSave} className="save-btn">Save Changes</button>
+            <button onClick={handleSave} className="save-btn">
+              Save Changes
+            </button>
           </div>
         ) : (
           <div>
             <h2>Task Details</h2>
-            {selectedTask && (
+            {modalState.selectedTask && (
               <div>
-                <p><strong>Title:</strong> {selectedTask.title}</p>
-                <p><strong>Created On:</strong> {selectedTask.createdAt}</p>
+                <p><strong>Title:</strong> {modalState.selectedTask.title}</p>
+                <p><strong>Created On:</strong> {modalState.selectedTask.createdAt}</p>
               </div>
             )}
           </div>

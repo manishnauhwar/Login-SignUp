@@ -1,10 +1,10 @@
 .manager-card {
   background: #ffffff;
-  padding: 15px;
+  padding: 10px;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   width: 100%;
-  max-width: 400px;
+  max-width: 300px;
 }
 
 .manager-card h2 {
@@ -30,7 +30,7 @@
 .wrapped-section {
   background: #ffffff;
   padding: 20px;
-  margin-top: 20px;
+  margin-top: 10px;
   border-radius: 10px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease-in-out;
@@ -52,7 +52,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  max-height: 170px;
+  max-height: 130px;
   overflow-y: auto;
   padding-right: 5px;
 }
@@ -61,8 +61,10 @@
 .team-container {
   display: flex;
   flex-wrap: wrap;
-  gap: 15px;
-  justify-content: center;
+  gap: 10px;
+  max-height: 140px;
+  overflow-y: auto;
+  padding-right: 5px;
 }
 
 /* Responsive Design */

@@ -5,13 +5,18 @@ import GoogleAuth from "./GoogleAuth";
 import "./GoogleAuth.css";
 import FacebookAuth from "./FacebookAuth";
 import "./FacebookAuth.css";
+import axiosInstance from "../../utils/axiosInstance";
 
 const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [passwordError, setPasswordError] = useState("");
   const navigate = useNavigate();
+  const [formState, setFormState] = useState({
+    email: "",
+    password: "",
+    errors: {
+      email: "",
+      password: "",
+    },
+  });
 
   const validateEmail = (email) => {
     const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -22,34 +27,75 @@ const Login = () => {
     return password.length >= 6;
   };
 
-  const handleLogin = async () => {
-    if (!validateEmail(email)) {
-      setEmailError("Enter a valid email.");
-      return;
-    }
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormState(prev => ({
+      ...prev,
+      [name]: value,
+      errors: {
+        ...prev.errors,
+        [name]: name === 'email'
+          ? (validateEmail(value) ? "" : "Invalid email format")
+          : (validatePassword(value) ? "" : "Password must be at least 6 characters")
+      }
+    }));
+  };
 
-    if (!validatePassword(password)) {
-      setPasswordError("Password must be at least 6 characters.");
+  const handleLogin = async (e) => {
+    e.preventDefault();
+
+    // Validate all fields
+    const emailValid = validateEmail(formState.email);
+    const passwordValid = validatePassword(formState.password);
+
+    if (!emailValid || !passwordValid) {
+      setFormState(prev => ({
+        ...prev,
+        errors: {
+          email: emailValid ? "" : "Enter a valid email",
+          password: passwordValid ? "" : "Password must be at least 6 characters"
+        }
+      }));
       return;
     }
 
     try {
-      const response = await fetch("http://localhost:5000/users");
-      const users = await response.json();
 
-      const user = users.find((user) => user.email === email && user.password === password);
+      const response = await axiosInstance.post("/users/login", {
+        email: formState.email,
+        password: formState.password
+      });
 
-      if (user) {
-        localStorage.setItem("authToken", email);
-        navigate("/dashboard");
+
+      if (response.data && response.data.user) {
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+
+        navigate("/dashboard", { replace: true });
       } else {
-        setEmailError("Invalid email or password.");
+        throw new Error("Invalid response from server");
       }
     } catch (error) {
       console.error("Error during login:", error);
-      setEmailError("An error occurred. Please try again.");
+
+      let errorMessage = "An error occurred. Please try again.";
+
+      if (error.code === 'ERR_NETWORK') {
+        errorMessage = "Unable to connect to server. Please check your internet connection.";
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+
+      setFormState(prev => ({
+        ...prev,
+        errors: {
+          ...prev.errors,
+          email: errorMessage
+        }
+      }));
     }
   };
+
+  const isFormValid = validateEmail(formState.email) && validatePassword(formState.password);
 
   return (
     <div className="login-container">
@@ -70,37 +116,40 @@ const Login = () => {
           </Link>
         </p>
 
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => {
-            setEmail(e.target.value);
-            setEmailError(validateEmail(e.target.value) ? "" : "Invalid email format");
-          }}
-          className={`input ${emailError ? "input-error" : ""}`}
-        />
-        {emailError && <p className="error-text">{emailError}</p>}
+        <form onSubmit={handleLogin}>
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            value={formState.email}
+            onChange={handleInputChange}
+            className={`input ${formState.errors.email ? "input-error" : ""}`}
+          />
+          {formState.errors.email && <p className="error-text">{formState.errors.email}</p>}
 
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => {
-            setPassword(e.target.value);
-            setPasswordError(validatePassword(e.target.value) ? "" : "Password must be at least 6 characters");
-          }}
-          className={`input ${passwordError ? "input-error" : ""}`}
-        />
-        {passwordError && <p className="error-text">{passwordError}</p>}
-        <Link to="/forgot-password" className="forgot-password">Forgot Password?</Link>
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            value={formState.password}
+            onChange={handleInputChange}
+            className={`input ${formState.errors.password ? "input-error" : ""}`}
+          />
+          {formState.errors.password && <p className="error-text">{formState.errors.password}</p>}
 
-        <button onClick={handleLogin} className="btn-primary" disabled={!validateEmail(email) || !validatePassword(password)}>
-          Login
-        </button>
+          <Link to="/forgot-password" className="forgot-password">Forgot Password?</Link>
+
+          <button
+            type="submit"
+            className="btn-primary"
+            disabled={!isFormValid}
+          >
+            Login
+          </button>
+        </form>
 
         <div className="social-login-container">
-          <GoogleAuth  />
+          <GoogleAuth />
           <FacebookAuth />
         </div>
       </div>

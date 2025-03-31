@@ -10,23 +10,21 @@ const MemberCard = ({ member, onTaskDrop }) => {
   const [{ isOver }, drop] = useDrop(() => ({
     accept: ITEM_TYPE,
     drop: (task) => {
-      onTaskDrop(task.id, member.id);
+      onTaskDrop(task.id, member._id);
     },
     collect: (monitor) => ({
       isOver: monitor.isOver(),
     }),
   }));
+
   return (
     <div
       ref={drop}
       className="member-card"
       data-theme={theme}
-      style={{
-        border: isOver ? "2px solid green" : "1px solid #ddd",
-        backgroundColor: isOver ? "#f0fff0" : "white",
-      }}
+      data-is-over={isOver}
     >
-      <h3>{member.name}</h3>
+      <h3>{member.username}</h3>
       <p><strong>Role:</strong> {member.role}</p>
       <p><strong>Email:</strong> {member.email}</p>
     </div>

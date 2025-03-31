@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { FaTachometerAlt, FaTasks, FaUserCog, FaUsers, FaCog } from "react-icons/fa";
 import { RiTeamLine } from "react-icons/ri";
 import { LuKanban } from "react-icons/lu";
@@ -7,15 +7,51 @@ import "./Sidebar.css";
 import { ThemeContext } from "../../utils/ThemeContext";
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
-  const { theme } = useContext(ThemeContext);
-  const [userRole, setUserRole] = useState(null);
+  const { theme, toggleTheme } = useContext(ThemeContext);
+  const [user, setUser] = useState(null);
+  const location = useLocation();
 
   useEffect(() => {
-    fetch("http://localhost:5000/users/U6")
-      .then((response) => response.json())
-      .then((data) => setUserRole(data.role))
-      .catch((error) => console.error("Error fetching user role:", error));
+    const storedUser = JSON.parse(localStorage.getItem('user'));
+    if (storedUser) {
+      setUser(storedUser);
+    }
   }, []);
+
+  const getMenuItems = () => {
+    const commonItems = [
+      { path: '/dashboard', icon: <FaTachometerAlt className="icon" />, text: 'Dashboard' },
+      { path: '/task-management', icon: <FaTasks className="icon" />, text: 'Task Management' },
+      { path: '/kanbanboard', icon: <LuKanban className="icon" />, text: 'Kanban Board' },
+      { path: '/settings', icon: <FaCog className="icon" />, text: 'Settings' }
+      
+    ];
+
+    if (!user) {
+      return commonItems;
+    }
+
+
+    const roleItems = {
+      admin: [
+        { path: '/users', icon: <FaUsers className="icon" />, text: 'Users' },
+        { path: '/team', icon: <RiTeamLine className="icon" />, text: 'Admin Panel' }
+        
+      ],
+      manager: [
+        { path: '/manager', icon: <FaUserCog className="icon" />, text: 'Manager Panel' }
+      ],
+      user: [ { path: '/users', icon: <FaUsers className="icon" />, text: 'Users' }
+        
+      ]
+    };
+
+    return [...commonItems, ...(roleItems[user.role] || [])];
+  };
+
+  const isActive = (path) => {
+    return location.pathname === path;
+  };
 
   return (
     <div className={`sidebar ${isOpen ? "open" : "closed"}`} data-theme={theme}>
@@ -26,28 +62,23 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         <h2 className="logo">{isOpen ? "Excellence Hub" : ""}</h2>
       </div>
       <div className="sidebar-list">
-        <Link to="/dashboard" className="sidebar-item">
-          <FaTachometerAlt className="icon" /> <span className="link-text">Dashboard</span>
-        </Link>
-        <Link to="/task-management" className="sidebar-item">
-          <FaTasks className="icon" /> <span className="link-text">Task Management</span>
-        </Link>
-        <Link to="/kanbanboard" className="sidebar-item">
-          <LuKanban className="icon" /> <span className="link-text">Kanban Board</span>
-        </Link>
-        <Link to="/team" className="sidebar-item">
-          <RiTeamLine className="icon" /> <span className="link-text">Team</span>
-        </Link>
-        <Link to="/manager" className="sidebar-item">
-          <FaUserCog className="icon" /> <span className="link-text">Manager</span>
-        </Link>
-        <Link to="/users" className="sidebar-item">
-          <FaUsers className="icon" /> <span className="link-text">Users</span>
-        </Link>
-        <Link to="/settings" className="sidebar-item">
-          <FaCog className="icon" /> <span className="link-text">Settings</span>
-        </Link>
+        {getMenuItems().map((item, index) => (
+          <Link 
+            key={index} 
+            to={item.path} 
+            className={`sidebar-item ${isActive(item.path) ? 'active' : ''}`}
+          >
+            {item.icon}
+            <span className="link-text">{item.text}</span>
+          </Link>
+        ))}
       </div>
+      {user && (
+        <div className="user-info">
+          <span className="user-role">{user.role}</span>
+          <span className="user-name">{user.username}</span>
+        </div>
+      )}
     </div>
   );
 };

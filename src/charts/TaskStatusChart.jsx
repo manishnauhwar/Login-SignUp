@@ -6,23 +6,37 @@ Chart.register(ArcElement, Tooltip, Legend);
 
 const TaskStatusChart = ({ tasks }) => {
   const completed = tasks.filter((t) => t.status === "Completed").length;
-  const pending = tasks.filter((t) => t.status === "Pending").length;
-  const overdue = tasks.filter((t) => t.status === "Overdue").length;
+  const todo = tasks.filter((t) => t.status === "To Do").length;
+  const inProgress = tasks.filter((t) => t.status === "In Progress").length;
 
   const data = {
-    labels: ["Completed", "Pending", "Overdue"],
+    labels: ["Completed", "To Do", "In Progress"],
     datasets: [
       {
-        data: [completed, pending, overdue],
-        backgroundColor: ["#4CAF50", "#FFC107", "#F44336"],
+        data: [completed, todo, inProgress],
+        backgroundColor: ["#4CAF50", "#FFC107", "#2196F3"],
         borderWidth: 2,
       },
     ],
   };
 
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom',
+      },
+      title: {
+        display: true,
+        text: 'Task Status Distribution'
+      }
+    }
+  };
+
   return (
     <div className="chart-box">
-      <Doughnut data={data} />
+      <Doughnut data={data} options={options} />
     </div>
   );
 };

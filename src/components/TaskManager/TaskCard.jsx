@@ -25,14 +25,22 @@ const TaskCard = ({ task }) => {
   const { theme } = useContext(ThemeContext);
   const [{ isDragging }, drag] = useDrag(() => ({
     type: ITEM_TYPE,
-    item: { id: task.id },
+    item: { _id: task._id },
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
   }));
 
   return (
-    <div ref={drag} className="task-cards" data-theme={theme} style={{ opacity: isDragging ? 0.5 : 1, cursor: "grab" }}>
+    <div
+      ref={drag}
+      className="task-cards"
+      data-theme={theme}
+      style={{
+        opacity: isDragging ? 0.5 : 1,
+        cursor: "grab"
+      }}
+    >
       <h3>{task.title}</h3>
       <p><strong>Status:</strong> {task.status}</p>
       <p>

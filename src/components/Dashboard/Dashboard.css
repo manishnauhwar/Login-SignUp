@@ -39,12 +39,14 @@ body {
   align-items: stretch;
   padding: 20px;
   margin-bottom: 10px;
+  
 }
 
 .previousyear > * {
   flex: 1;
   min-width: 300px;
   max-width: 48%;
+  max-height: 350px;
   padding: 20px;
   border-radius: 8px;
   background: #fff;

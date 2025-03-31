@@ -11,6 +11,7 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 import { useNotifications } from "../../utils/NotificationContext";
 import { ThemeContext } from "../../utils/ThemeContext";
 import "./Manager.css";
+import axiosInstance from "../../utils/axiosInstance";
 
 const Manager = () => {
   const navigate = useNavigate();
@@ -25,19 +26,51 @@ const Manager = () => {
   useEffect(() => {
     const fetchTeams = async () => {
       try {
-        const res = await fetch("http://localhost:5000/teams");
-        const data = await res.json();
-        if (Array.isArray(data)) {
-          const loggedInManagerId = "M2";
-          const managerTeam = data.find((team) => team.manager.id === loggedInManagerId);
-          if (managerTeam) {
-            setManager(managerTeam.manager);
-            setTeamMembers(managerTeam.members);
-            setTeamId(managerTeam.id);
+        const storedUser = JSON.parse(localStorage.getItem('user'));
+
+        if (!storedUser) {
+                    return;
+        }
+
+        if (storedUser.role !== 'manager') {
+          setManager(storedUser);
+          setTeamMembers([]);
+          setTeamId(null);
+          return;
+        }
+
+        try {
+          const res = await axiosInstance("/teams");
+          const teamsData = res.data;
+
+          const userTeam = teamsData.find(team => team.manager._id === storedUser.id);
+
+          if (userTeam) {
+            setManager(userTeam.manager);
+            setTeamMembers(userTeam.members);
+            setTeamId(userTeam._id);
+          } else {
+            setManager(storedUser);
+            setTeamMembers([]);
+            setTeamId(null);
+          }
+        } catch (error) {
+          if (error.response?.status === 403) {
+            setManager(storedUser);
+            setTeamMembers([]);
+            setTeamId(null);
+          } else {
+            throw error; 
           }
         }
       } catch (error) {
-        console.error("Error fetching teams:", error);
+        console.error("Error in fetchTeams:", error);
+        const storedUser = JSON.parse(localStorage.getItem('user'));
+        if (storedUser) {
+          setManager(storedUser);
+          setTeamMembers([]);
+          setTeamId(null);
+        }
       }
     };
     fetchTeams();
@@ -47,10 +80,13 @@ const Manager = () => {
     const fetchTasks = async () => {
       if (!manager) return;
       try {
-        const res = await fetch("http://localhost:5000/tasks");
-        const data = await res.json();
+        const res = await axiosInstance.get("/tasks");
+        const data = res.data;
+
         if (Array.isArray(data)) {
-          const tasksAssignedToManager = data.filter((task) => task.assignedTo === manager.id);
+          const tasksAssignedToManager = data.filter((task) => {
+            return task.assignedTo === manager._id;
+          });
           setManagerTasks(tasksAssignedToManager);
         }
       } catch (error) {
@@ -67,19 +103,23 @@ const Manager = () => {
 
   const handleTaskDrop = async (taskId, memberId) => {
     try {
-      const res = await fetch(`http://localhost:5000/tasks/${taskId}`);
-      const taskData = await res.json();
-      const assignedMember = teamMembers.find((member) => member.id === memberId);
-      if (!assignedMember) return;
-      await fetch(`http://localhost:5000/tasks/${taskId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ assignedTo: memberId, status: "In progress" }),
+      const taskRes = await axiosInstance.get(`/tasks/${taskId}`);
+      const taskData = taskRes.data;
+
+      const assignedMember = teamMembers.find((member) => member._id === memberId);
+      if (!assignedMember) {
+        return;
+      }
+      await axiosInstance.patch(`/tasks/${taskId}`, {
+        assignedTo: memberId,
+        status: "In progress"
       });
+
       setManagerTasks((prevTasks) =>
-        prevTasks.filter((task) => task.id !== taskId)
+        prevTasks.filter((task) => task._id !== taskId)
       );
-      addNotification(`Task "${taskData.title}" assigned to ${assignedMember.name}`);
+
+      addNotification(`Task "${taskData.title}" assigned to ${assignedMember.username}`);
     } catch (error) {
       console.error("Error updating task:", error);
     }
@@ -95,8 +135,8 @@ const Manager = () => {
           {manager ? (
             <div className="manager-card">
               <h2>Manager Details</h2>
-              <p><strong>ID:</strong> {manager.id}</p>
-              <p><strong>Name:</strong> {manager.name}</p>
+              <p><strong>ID:</strong> {manager._id}</p>
+              <p><strong>Name:</strong> {manager.username}</p>
               <p><strong>Email:</strong> {manager.email}</p>
             </div>
           ) : (
@@ -107,7 +147,7 @@ const Manager = () => {
             {managerTasks.length > 0 ? (
               <div className="task-container">
                 {managerTasks.map((task) => (
-                  <ManagerTaskCard key={task.id} task={task} />
+                  <ManagerTaskCard key={task._id} task={task} />
                 ))}
               </div>
             ) : (
@@ -119,7 +159,7 @@ const Manager = () => {
             {teamMembers.length > 0 ? (
               <div className="team-container">
                 {teamMembers.map((member) => (
-                  <MemberCard key={member.id} member={member} onTaskDrop={handleTaskDrop} />
+                  <MemberCard key={member._id} member={member} onTaskDrop={handleTaskDrop} />
                 ))}
               </div>
             ) : (

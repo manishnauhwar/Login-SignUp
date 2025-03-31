@@ -1,31 +1,123 @@
 .task-card {
-  background: #fff;
-  padding: 12px;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  max-width: 225px;
-  border-left: 4px solid #3498db;
-  transition: transform 0.2s ease-in-out;
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%) !important;
+  padding: 8px;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  max-width: 200px;
+  border-left: 3px solid #3498db;
+  transition: all 0.3s ease-in-out;
   height: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+  overflow: hidden;
+}
+
+.task-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #3498db, #2980b9) !important;
 }
 
 .task-card:hover {
-  transform: translateY(-3px);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  background: linear-gradient(135deg, #bbdefb 0%, #90caf9 100%) !important;
 }
 
 .task-card h3 {
-  font-size: 16px;
-  margin-bottom: 8px;
+  font-size: 14px;
+  margin: 0;
   color: #2c3e50;
   font-weight: 600;
+  line-height: 1.3;
+  position: relative;
+  z-index: 1;
 }
 
 .task-card p {
-  font-size: 14px;
+  font-size: 12px;
   color: #555;
-  padding: 5px;
-  border-left: 4px solid #927119;
-  background: #fcf6e5;
-  border-radius: 5px;
-  padding-left: 10px;
+  margin: 0;
+  padding: 4px 8px;
+  border-left: 3px solid #927119;
+  background: linear-gradient(135deg, #fcf6e5 0%, #fff9e6 100%) !important;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+  z-index: 1;
+}
+
+.task-card strong {
+  font-size: 11px;
+  color: #666;
+  min-width: 60px;
+}
+
+/* Dark theme styles */
+[data-theme="dark"] .task-card {
+  background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%) !important;
+  border-left-color: #74b9ff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .task-card::before {
+  background: linear-gradient(90deg, #74b9ff, #0984e3) !important;
+}
+
+[data-theme="dark"] .task-card:hover {
+  background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%) !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .task-card h3 {
+  color: #dfe6e9;
+}
+
+[data-theme="dark"] .task-card p {
+  color: #b2bec3;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.1) 100%) !important;
+  border-left-color: #fdcb6e;
+}
+
+[data-theme="dark"] .task-card strong {
+  color: #a0a0a0;
+}
+
+/* Priority colors */
+.task-card p[data-priority="High"] {
+  border-left-color: #ff6b6b;
+  background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%) !important;
+}
+
+.task-card p[data-priority="Medium"] {
+  border-left-color: #ffb74d;
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%) !important;
+}
+
+.task-card p[data-priority="Low"] {
+  border-left-color: #4caf50;
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%) !important;
+}
+
+[data-theme="dark"] .task-card p[data-priority="High"] {
+  background: linear-gradient(135deg, rgba(255, 107, 107, 0.3) 0%, rgba(255, 107, 107, 0.2) 100%) !important;
+  border-left-color: #ff6b6b;
+}
+
+[data-theme="dark"] .task-card p[data-priority="Medium"] {
+  background: linear-gradient(135deg, rgba(255, 183, 77, 0.3) 0%, rgba(255, 183, 77, 0.2) 100%) !important;
+  border-left-color: #ffb74d;
+}
+
+[data-theme="dark"] .task-card p[data-priority="Low"] {
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.3) 0%, rgba(76, 175, 80, 0.2) 100%) !important;
+  border-left-color: #4caf50;
 }

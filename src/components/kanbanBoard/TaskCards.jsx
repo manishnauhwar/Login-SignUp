@@ -1,80 +1,84 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useContext } from "react";
 import { useDrag } from "react-dnd";
 import { ThemeContext } from "../../utils/ThemeContext";
 import "./TaskCards.css";
 
 const ITEM_TYPE = "TASK";
 
+const getPriorityStyle = (priority) => {
+  if (!priority) {
+    return { backgroundColor: "#ddd", color: "black" };
+  }
+  switch (priority.toLowerCase()) {
+    case "high":
+      return { backgroundColor: "#ff6b6b", color: "white" };
+    case "medium":
+      return { backgroundColor: "#ffb74d", color: "white" };
+    case "low":
+      return { backgroundColor: "#4caf50", color: "white" };
+    default:
+      return { backgroundColor: "#ddd", color: "black" };
+  }
+};
+
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
+};
+
 const TaskCards = ({ task }) => {
   const { theme } = useContext(ThemeContext);
   const [{ isDragging }, drag] = useDrag(() => ({
     type: ITEM_TYPE,
-    item: { id: task.id },
-    collect: (monitor) => ({ isDragging: !!monitor.isDragging() })
+    item: { _id: task._id, status: task.status },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
   }));
 
-  const [time, setTime] = useState(task.timeElapsed || 0);
-  const [running, setRunning] = useState(false);
-
-  useEffect(() => {
-    let interval;
-    if (running) {
-      interval = setInterval(() => {
-        setTime((prev) => prev + 1);
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [running]);
-
-  const updateTaskTime = async (updatedTime) => {
-    try {
-      await fetch(`http://localhost:5000/tasks/${task.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ timeElapsed: updatedTime }),
-      });
-    } catch (error) {
-      console.error("Error updating task time:", error);
-    }
-  };
-
-  const handlePause = () => {
-    setRunning(false);
-    updateTaskTime(time);
-  };
-
-  const handleReset = () => {
-    setRunning(false);
-    setTime(0);
-    updateTaskTime(0);
-  };
-
-  const formatTime = (seconds) => {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = seconds % 60;
-    return `${h}h ${m}m ${s}s`;
-  };
-
   return (
-    <div ref={drag} className="task-card" data-theme={theme} style={{ opacity: isDragging ? 0.5 : 1 }}>
-      <h4>{task.title}</h4>
-      <p>Description: {task.description}</p>
-      <p>Due: {task.dueDate}</p>
-      <p>Priority: {task.priority}</p>
-      <p>Status: {task.status}</p>
-      <p>Assigned To: {task.assignedTo}</p>
-      <p>Created: {task.createdAt}</p>
-      <p>Completion Time: {task.completionTime}</p>
-      <div className="timer">
-        <span>{formatTime(time)}</span>
-        {!running && task.status !== "completed" ? (
-          <button onClick={() => setRunning(true)}>Start Timer</button>
-        ) : (
-          <button onClick={handlePause}>Pause</button>
-        )}
-        <button onClick={handleReset}>Reset</button>
-      </div>
+    <div
+      ref={drag}
+      className="task-cards"
+      data-theme={theme}
+      style={{
+        opacity: isDragging ? 0.5 : 1,
+        cursor: "grab",
+        backgroundColor: isDragging ? "#f0f0f0" : "white"
+      }}
+    >
+      <h3>{task.title}</h3>
+      <p>
+        <strong>Status:</strong>{" "}
+        <span style={{
+          ...getPriorityStyle(task.status),
+          padding: "2px 8px",
+          borderRadius: "12px",
+          fontSize: "12px",
+          textTransform: "capitalize"
+        }}>
+          {task.status}
+        </span>
+      </p>
+      <p>
+        <strong>Priority:</strong>{" "}
+        <span style={{
+          ...getPriorityStyle(task.priority),
+          padding: "2px 8px",
+          borderRadius: "12px",
+          fontSize: "12px",
+          textTransform: "capitalize"
+        }}>
+          {task.priority}
+        </span>
+      </p>
+      <p className="due-date">
+        <strong>Due:</strong> {formatDate(task.dueDate)}
+      </p>
     </div>
   );
 };

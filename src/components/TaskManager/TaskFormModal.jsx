@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { ThemeContext } from "../../utils/ThemeContext";
 import "./TaskFormModal.css";
+import axiosInstance from "../../utils/axiosInstance";
 
 const TaskFormModal = ({ onClose, onSave }) => {
   const { theme } = useContext(ThemeContext);
@@ -13,9 +14,12 @@ const TaskFormModal = ({ onClose, onSave }) => {
 
   useEffect(() => {
     const fetchTeams = async () => {
-      const res = await fetch("http://localhost:5000/teams");
-      const data = await res.json();
-      setTeam(data);
+      try {
+        const response = await axiosInstance.get("/teams");
+        setTeam(response.data);
+      } catch (error) {
+        console.error("Error fetching teams:", error);
+      }
     };
     fetchTeams();
   }, []);
@@ -50,7 +54,7 @@ const TaskFormModal = ({ onClose, onSave }) => {
         <select className="modal-input" value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)}>
           <option value="">Assign to</option>
           {team.map((member) => (
-            <option key={member.id} value={member.id}>{member.name}</option>
+            <option key={member._id} value={member._id}>{member.name}</option>
           ))}
         </select>
         <label className="modal-checkbox">

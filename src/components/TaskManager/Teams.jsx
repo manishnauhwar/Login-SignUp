@@ -4,12 +4,12 @@ import { logout } from "../../utils/auth";
 import Sidebar from "../sidebar/Sidebar";
 import Navbar from "../Navbar/Navbar";
 import Main from "../Title/Main";
-import TaskFormModal from "./TaskFormModal";
 import TaskCard from "./TaskCard";
 import TeamCard from "./TeamCard";
 import "./Teams.css";
 import { useNotifications } from "../../utils/NotificationContext";
 import { ThemeContext } from "../../utils/ThemeContext";
+import axiosInstance from "../../utils/axiosInstance";
 
 const Teams = () => {
   const navigate = useNavigate();
@@ -18,22 +18,31 @@ const Teams = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [teams, setTeams] = useState([]);
   const [tasks, setTasks] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchTeams = async () => {
-      const res = await fetch("http://localhost:5000/teams");
-      const data = await res.json();
-      setTeams(data);
+      try {
+        const response = await axiosInstance.get("/teams");
+        setTeams(response.data);
+      } catch (error) {
+        console.error("Error fetching teams:", error);
+        addNotification("Failed to fetch teams");
+      }
     };
+
     const fetchTasks = async () => {
-      const res = await fetch("http://localhost:5000/tasks");
-      const data = await res.json();
-      setTasks(data);
+      try {
+        const response = await axiosInstance.get("/tasks");
+        setTasks(response.data);
+      } catch (error) {
+        console.error("Error fetching tasks:", error);
+        addNotification("Failed to fetch tasks");
+      }
     };
+
     fetchTeams();
     fetchTasks();
-  }, []);
+  }, [addNotification]);
 
   const handleLogout = () => {
     logout();
@@ -42,23 +51,31 @@ const Teams = () => {
 
   const handleAssignTask = async (taskId, teamId) => {
     try {
-      const updatedTask = { assignedTo: teamId, status: "In progress" };
-      const response = await fetch(`http://localhost:5000/tasks/${taskId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedTask),
-      });
-      if (!response.ok) {
-        throw new Error("Failed to assign task");
+      const assignedTeam = teams.find((team) => team._id === teamId);
+      if (!assignedTeam) {
+        throw new Error("Team not found");
       }
-      const taskData = await response.json();
-      const assignedTeam = teams.find((team) => team.id === teamId);
-      setTasks((prevTasks) =>
-        prevTasks.map((task) =>
-          task.id === taskId ? { ...task, ...updatedTask } : task
-        )
-      );
-      addNotification(`Task "${taskData.title}" assigned to ${assignedTeam.name}`);
+
+      const taskResponse = await axiosInstance.get(`/tasks/${taskId}`);
+      const currentTask = taskResponse.data;
+
+      const updatedTask = {
+        ...currentTask,
+        assignedTo: assignedTeam.manager._id,
+        userId: currentTask.userId,
+        status: "In progress"
+      };
+
+      const response = await axiosInstance.patch(`/tasks/${taskId}`, updatedTask);
+
+      if (response.data) {
+        setTasks((prevTasks) =>
+          prevTasks.map((task) =>
+            task._id === taskId ? { ...task, ...updatedTask } : task
+          )
+        );
+        addNotification(`Task "${response.data.title}" assigned to ${assignedTeam.manager.username}`);
+      }
     } catch (error) {
       console.error("Error assigning task:", error);
       addNotification("Failed to assign task. Please try again.");
@@ -79,7 +96,7 @@ const Teams = () => {
           <h2>Unassigned Tasks</h2>
           <div className="unassigned-tasks">
             {unassignedTasks.length > 0 ? (
-              unassignedTasks.map((task) => <TaskCard key={task.id} task={task} />)
+              unassignedTasks.map((task) => <TaskCard key={task._id} task={task} />)
             ) : (
               <p>No unassigned tasks available.</p>
             )}
@@ -87,10 +104,9 @@ const Teams = () => {
         </div>
         <div className="team-section">
           {teams.map((team) => (
-            <TeamCard key={team.id} team={team} onDropTask={handleAssignTask} />
+            <TeamCard key={team._id} team={team} onDropTask={handleAssignTask} />
           ))}
         </div>
-        {isModalOpen && <TaskFormModal onClose={() => setIsModalOpen(false)} />}
       </div>
     </div>
   );

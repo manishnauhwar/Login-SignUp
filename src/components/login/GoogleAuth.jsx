@@ -1,41 +1,34 @@
 import React from "react";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { useNavigate } from "react-router-dom";
+import axiosInstance from "../../utils/axiosInstance";
 import "../../App.css";
 
 const GoogleAuth = () => {
   const navigate = useNavigate();
 
   const handleSuccess = async (response) => {
-    const token = response.credential;
-    const userData = JSON.parse(atob(token.split(".")[1]));
-
     try {
-      const res = await fetch(`http://localhost:5000/users?email=${userData.email}`);
-      const users = await res.json();
+      const res = await axiosInstance.post("/", {
+        token: response.credential
+      });
 
-      if (users.length > 0) {
-        localStorage.setItem("authToken", token);
-        navigate("/home");
-      } else {
-        await fetch("http://localhost:5000/users", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: userData.email, name: userData.name }),
-        });
-        navigate("/login");
+      if (res.data.success) {
+        localStorage.setItem("user", JSON.stringify(res.data.user));
+        navigate("/dashboard");
       }
     } catch (error) {
-      alert("Authentication failed!");
+      console.error("Google authentication error:", error);
+      alert("Authentication failed! Please try again.");
     }
   };
 
   const handleError = () => {
-    alert("Login Failed!");
+    alert("Login Failed! Please try again.");
   };
 
   return (
-    <GoogleOAuthProvider clientId="1017771155951-5ioboilkq21lo4pflqg3kqof3eevdaed.apps.googleusercontent.com">
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
       <div className="google-login-container">
         <GoogleLogin
           onSuccess={handleSuccess}

@@ -1,63 +1,146 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import img from "../../assets/img.webp";
+import axiosInstance from "../../utils/axiosInstance";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
 
-  const handleReset = async () => {
+  const handleEmailSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+    setMessage("");
+
     try {
-      const response = await fetch("http://localhost:5000/users");
-      const users = await response.json();
-      const user = users.find((user) => user.email === email);
-
-      if (user) {
-        setPassword(`Your password: ${user.password}`);
-        setError("");
+      const response = await axiosInstance.get(`/users/check-email/${email}`);
+      if (response.data.exists) {
+        setIsEmailVerified(true);
+        setMessage("Email verified. Please enter your new password.");
       } else {
-        setPassword("");
-        setError("Email not found.");
+        setError("Email not found. Please check your email address.");
       }
     } catch (error) {
       setError("An error occurred. Please try again.");
-      console.error("Error fetching users:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePasswordReset = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+    setMessage("");
+
+    if (newPassword !== confirmPassword) {
+      setError("Passwords do not match");
+      setIsLoading(false);
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setError("Password must be at least 6 characters long");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      await axiosInstance.post("/users/reset-password", {
+        email,
+        newPassword
+      });
+      setMessage("Password has been reset successfully");
+      // Reset form
+      setEmail("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setIsEmailVerified(false);
+    } catch (error) {
+      setError(error.response?.data?.message || "An error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="forgot-password-container">
-      <div className="forgot-left">
-        <img src={img} alt="Background" className="forgot-img" />
-        <div className="forgot-overlay-text">
+    <div className="login-container">
+      <div className="login-left">
+        <img src={img} alt="Background" className="login-img" />
+        <div className="overlay-text">
           <h1>Reset Password</h1>
-          <p className="p-text">Enter your email to retrieve your password.</p>
+          <p>Enter your email to reset your password.</p>
         </div>
       </div>
 
-      <div className="forgot-right">
-        <h2 className="forgot-title">Forgot Password</h2>
-        <p className="forgot-text">Enter your email to view your password.</p>
+      <div className="login-right">
+        <h2>Reset Password</h2>
+        <p>
+          Remember your password?{" "}
+          <Link to="/login" className="link">
+            Login
+          </Link>
+        </p>
 
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="forgot-input"
-        />
+        {!isEmailVerified ? (
+          <form onSubmit={handleEmailSubmit}>
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="input"
+              required
+            />
 
-        <button onClick={handleReset} className="forgot-btn" disabled={!email}>
-          Get Password
-        </button>
+            {error && <p className="error-message">{error}</p>}
 
-        {password && <p className="success-text">{password}</p>}
-        {error && <p className="error-text">{error}</p>}
+            <button
+              type="submit"
+              className="btn-primary"
+              disabled={isLoading}
+            >
+              {isLoading ? "Verifying..." : "Verify Email"}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handlePasswordReset}>
+            <input
+              type="password"
+              placeholder="New Password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="input"
+              required
+            />
 
-        <div className="back-to-login">
-          <Link to="/login">Back to Login</Link>
-        </div>
+            <input
+              type="password"
+              placeholder="Confirm New Password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="input"
+              required
+            />
+
+            {message && <p className="success-message">{message}</p>}
+            {error && <p className="error-message">{error}</p>}
+
+            <button
+              type="submit"
+              className="btn-primary"
+              disabled={isLoading}
+            >
+              {isLoading ? "Resetting..." : "Reset Password"}
+            </button>
+          </form>
+        )}
       </div>
     </div>
   );
