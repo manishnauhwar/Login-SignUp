@@ -3,7 +3,7 @@ import { isAuthenticated } from "../utils/auth";
 import Login from "../components/login/Login";
 import Signup from "../components/login/Signup";
 import ForgotPassword from "../components/login/ForgotPassword";
-import Manager from "../components/manager/Manager";
+import Manager from "../components/Manager/Manager";
 import KanbanBoard from "../components/kanbanBoard/KanbanBoard";
 import TaskManagement from "../components/TaskManager/TaskManagement";
 import Teams from "../components/TaskManager/Teams";
