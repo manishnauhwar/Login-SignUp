@@ -8,19 +8,24 @@
   max-width: 450px;
   overflow: hidden;
   border: 1px solid #ddd;
-  transition: background-color 0.3s ease-in-out;
+  transition: all 0.3s ease-in-out;
 }
 
-.team-group:hover {
-  background: #f0f8ff;
+.team-group.is-over {
+  border: 2px solid #4CAF50;
+  background: #f0fff0;
 }
 
 .team-name {
   font-size: 20px;
+  color: #333;
+  margin-bottom: 10px;
 }
 
 .team-manager {
   font-size: 14px;
+  color: #666;
+  margin-bottom: 15px;
 }
 
 /* Team Table Styling */
@@ -42,13 +47,67 @@
   font-size: 14px;
   word-break: break-word;
   overflow: hidden;
+  color: #333;
 }
 
 .team-table-row:nth-child(even) {
   background: #f8f9fa;
 }
 
+/* Dark theme styles */
+[data-theme="dark"] .team-group {
+  background: #2d2d2d;
+  border-color: #404040;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .team-group.is-over {
+  border-color: #4CAF50;
+  background: #1a3d1a;
+}
+
+[data-theme="dark"] .team-name {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .team-manager {
+  color: #b3b3b3;
+}
+
+[data-theme="dark"] .team-table-header {
+  background: #0056b3;
+}
+
+[data-theme="dark"] .team-table-cell {
+  border-color: #404040;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .team-table-row:nth-child(even) {
+  background: #363636;
+}
+
+[data-theme="dark"] .team-table-row:nth-child(odd) {
+  background: #2d2d2d;
+}
+
+/* Hover effects */
+.team-group:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="dark"] .team-group:hover {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* Responsive styles */
 @media (max-width: 768px) {
+  .team-group {
+    min-width: 280px;
+    padding: 15px;
+  }
+
   .team-table-cell {
     font-size: 12px;
     padding: 6px;
@@ -56,6 +115,10 @@
 
   .team-name {
     font-size: 16px;
+  }
+
+  .team-manager {
+    font-size: 12px;
   }
 }
 
@@ -69,8 +132,17 @@
   cursor: pointer;
   margin: 10px 20px;
   max-width: 100px;
+  transition: background-color 0.3s ease;
 }
 
 .team-button:hover {
   background: #0056b3;
+}
+
+[data-theme="dark"] .team-button {
+  background: #0056b3;
+}
+
+[data-theme="dark"] .team-button:hover {
+  background: #003d80;
 }

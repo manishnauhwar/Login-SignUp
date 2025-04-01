@@ -2,6 +2,8 @@ import React, { useContext } from "react";
 import { useDrag } from "react-dnd";
 import { ThemeContext } from "../../utils/ThemeContext";
 import "./TaskCard.css";
+import axiosInstance from "../../utils/axiosInstance";
+import { useNotifications } from "../../utils/NotificationContext";
 
 const ITEM_TYPE = "TASK";
 
@@ -21,8 +23,9 @@ const getPriorityStyle = (priority) => {
   }
 };
 
-const TaskCard = ({ task }) => {
+const TaskCard = ({ task, onDelete }) => {
   const { theme } = useContext(ThemeContext);
+  const { addNotification } = useNotifications();
   const [{ isDragging }, drag] = useDrag(() => ({
     type: ITEM_TYPE,
     item: { _id: task._id },
@@ -30,6 +33,19 @@ const TaskCard = ({ task }) => {
       isDragging: monitor.isDragging(),
     }),
   }));
+
+  const handleDelete = async () => {
+    try {
+      await axiosInstance.delete(`/tasks/${task._id}`);
+      addNotification(`Task "${task.title}" deleted successfully`);
+      if (onDelete) {
+        onDelete(task._id);
+      }
+    } catch (error) {
+      console.error("Error deleting task:", error);
+      addNotification("Failed to delete task");
+    }
+  };
 
   return (
     <div
@@ -41,7 +57,18 @@ const TaskCard = ({ task }) => {
         cursor: "grab"
       }}
     >
-      <h3>{task.title}</h3>
+      <div className="task-header">
+        <h3>{task.title}</h3>
+        {(task.userRole === 'admin' || task.userRole === 'manager') && (
+          <button
+            className="delete-button"
+            onClick={handleDelete}
+            title="Delete task"
+          >
+            ×
+          </button>
+        )}
+      </div>
       <p><strong>Status:</strong> {task.status}</p>
       <p>
         <strong>Priority:</strong>{" "}

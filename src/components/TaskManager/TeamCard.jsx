@@ -21,15 +21,11 @@ const TeamCard = ({ team, onDropTask }) => {
     }),
   }));
 
-
   return (
     <div
       ref={drop}
-      className={`team-group ${theme}`}
-      style={{
-        border: isOver ? "2px solid green" : "1px solid #ddd",
-        backgroundColor: isOver ? "#f0fff0" : "white",
-      }}
+      className={`team-group ${isOver ? 'is-over' : ''}`}
+      data-theme={theme}
     >
       <h2 className="team-name">{team.name}</h2>
       <p className="team-manager">

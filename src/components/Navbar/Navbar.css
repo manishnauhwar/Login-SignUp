@@ -117,10 +117,12 @@
   cursor: pointer;
   position: relative;
   z-index: 1051;
+  color: #fff;
 }
 
 .notification-icon {
   font-size: 1.8rem;
+  color: #fff;
 }
 
 .notification-count {
