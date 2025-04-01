@@ -19,6 +19,14 @@ const TaskManagement = () => {
   const [allTasks, setAllTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem('user'));
+    if (storedUser) {
+      setUser(storedUser);
+    }
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -80,7 +88,17 @@ const TaskManagement = () => {
         <Main />
         <SortTasks tasks={tasks} setTasks={setTasks} fullData={allTasks} setFullData={setAllTasks} />
         <div className='data-table'>
-          {loading ? <p>Loading...</p> : <DueDateTableWithModal tasks={tasks} setTasks={setTasks} searchQuery={searchQuery} />}
+          {loading ? (
+            <p>Loading...</p>
+          ) : (
+            <DueDateTableWithModal
+              tasks={tasks}
+              setTasks={setTasks}
+              searchQuery={searchQuery}
+              userId={user?.id}
+              userRole={user?.role}
+            />
+          )}
         </div>
       </div>
     </div>

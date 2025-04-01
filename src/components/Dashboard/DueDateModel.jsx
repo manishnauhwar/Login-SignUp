@@ -38,7 +38,7 @@ const DueDateModel = ({ tasks = [], setTasks, searchQuery, userId, userRole }) =
       assignedTo: "",
       userId: userId || "default"
     };
-  
+
     try {
       const { data } = await axiosInstance.post("/tasks/post", newTask);
       setTasks(prev => [...(Array.isArray(prev) ? prev : []), { ...newTask, id: data?._id || Date.now().toString() }]);
@@ -48,7 +48,7 @@ const DueDateModel = ({ tasks = [], setTasks, searchQuery, userId, userRole }) =
       alert(error.response?.data?.error?.message || "Failed to add task. Please try again.");
     }
   };
-  
+
 
   const handleView = (task) => {
     setModalState(prev => ({
@@ -73,18 +73,17 @@ const DueDateModel = ({ tasks = [], setTasks, searchQuery, userId, userRole }) =
   };
 
   const handleDelete = async (taskId) => {
-    if (userRole !== 'admin') {
-      alert('Only administrators can delete tasks');
+    if (userRole !== 'admin' && userRole !== 'manager') {
+      alert('Only administrators and managers can delete tasks');
       return;
     }
-
-    if (!window.confirm('Are you sure you want to delete this task?')) return;
 
     try {
       await axiosInstance.delete(`/tasks/${taskId}`);
       setTasks(prev => prev.filter(task => task.id !== taskId));
     } catch (error) {
       console.error("Error deleting task:", error);
+      alert("Failed to delete task. Please try again.");
     }
   };
 
@@ -200,7 +199,7 @@ const DueDateModel = ({ tasks = [], setTasks, searchQuery, userId, userRole }) =
                   >
                     Update
                   </button>
-                  {userRole === 'admin' && (
+                  {(userRole === 'admin' || userRole === 'manager') && (
                     <button
                       onClick={(e) => { e.stopPropagation(); handleDelete(task.id); }}
                       className="delete-btn"

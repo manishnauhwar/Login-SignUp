@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import img from "../../assets/img.webp";
-import GoogleAuth from "./GoogleAuth";
+import GoogleAuth from "../login/GoogleAuth";
 import "./GoogleAuth.css";
-import FacebookAuth from "./FacebookAuth";
+import FacebookAuth from "../login/FacebookAuth";
 import "./FacebookAuth.css";
 import axiosInstance from "../../utils/axiosInstance";
+import { setAuthData } from "../../utils/auth";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -60,16 +61,13 @@ const Login = () => {
     }
 
     try {
-
       const response = await axiosInstance.post("/users/login", {
         email: formState.email,
         password: formState.password
       });
 
-
-      if (response.data && response.data.user) {
-        localStorage.setItem("user", JSON.stringify(response.data.user));
-
+      if (response.data && response.data.user && response.data.token) {
+        setAuthData(response.data.token, response.data.user);
         navigate("/dashboard", { replace: true });
       } else {
         throw new Error("Invalid response from server");

@@ -53,6 +53,7 @@ const Teams = () => {
     try {
       const assignedTeam = teams.find((team) => team._id === teamId);
       if (!assignedTeam) {
+        console.error('Team not found:', teamId);
         throw new Error("Team not found");
       }
 
@@ -68,12 +69,22 @@ const Teams = () => {
 
       const response = await axiosInstance.patch(`/tasks/${taskId}`, updatedTask);
 
+
       if (response.data) {
-        setTasks((prevTasks) =>
-          prevTasks.map((task) =>
-            task._id === taskId ? { ...task, ...updatedTask } : task
-          )
-        );
+        setTasks((prevTasks) => {
+          const updatedTasks = prevTasks.map((task) => {
+            if (task._id === taskId) {
+              const updatedTask = {
+                ...task,
+                assignedTo: assignedTeam.manager._id,
+                status: "In progress"
+              };
+              return updatedTask;
+            }
+            return task;
+          });
+          return updatedTasks;
+        });
         addNotification(`Task "${response.data.title}" assigned to ${assignedTeam.manager.username}`);
       }
     } catch (error) {
@@ -83,7 +94,10 @@ const Teams = () => {
   };
 
   const unassignedTasks = tasks.filter(
-    (task) => !task.assignedTo && task.status !== "Completed"
+    (task) => {
+      const isUnassigned = !task.assignedTo && task.status !== "Completed";
+      return isUnassigned;
+    }
   );
 
   return (

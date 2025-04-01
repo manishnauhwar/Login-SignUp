@@ -83,19 +83,23 @@ const KanbanBoard = () => {
         return;
       }
 
-      if (task.assignedTo !== userId) {
-        console.error("User is not assigned to this task");
-        return;
+      if (task.assignedTo === userId || task.userId === userId) {
+        await axiosInstance.patch(`/tasks/${taskId}`, { status: newStatus });
+        setTasks((prevTasks) =>
+          prevTasks.map((task) =>
+            task._id === taskId ? { ...task, status: newStatus } : task
+          )
+        );
+      } else {
+        console.error("User is not authorized to modify this task");
       }
-
-      await axiosInstance.patch(`/tasks/${taskId}`, { status: newStatus });
-      setTasks((prevTasks) =>
-        prevTasks.map((task) =>
-          task._id === taskId ? { ...task, status: newStatus } : task
-        )
-      );
     } catch (error) {
       console.error("Error updating task status:", error);
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        navigate('/login');
+      }
     }
   };
 
