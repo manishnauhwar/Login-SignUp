@@ -16,7 +16,6 @@
   z-index: 1;
 }
 
-/* Different background colors for task cards */
 .task-cards:nth-child(3n+1) {
   background-color: #e3f2fd !important;
 }
@@ -81,45 +80,43 @@
   font-size: 11px;
 }
 
-/* Dark theme styles */
 [data-theme="dark"] .task-cards {
-  background: linear-gradient(135deg, #2d3436 0%, #353b48 100%) !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
-  color: #fff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  background: #1e1e1e !important;
+  border-color: #333333 !important;
+  color: #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 [data-theme="dark"] .task-cards:nth-child(3n+1) {
-  background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%) !important;
+  background: #252525 !important;
 }
 
 [data-theme="dark"] .task-cards:nth-child(3n+2) {
-  background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%) !important;
+  background: #2a2a2a !important;
 }
 
 [data-theme="dark"] .task-cards:nth-child(3n+3) {
-  background: linear-gradient(135deg, #1565c0 0%, #1976d2 100%) !important;
+  background: #303030 !important;
 }
 
 [data-theme="dark"] .task-cards:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+  background: #383838 !important;
 }
 
 [data-theme="dark"] .task-cards h3 {
-  color: #fff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  color: #f2f9f9 !important;
 }
 
 [data-theme="dark"] .task-cards p {
-  color: #dfe6e9;
+  color: #ffffff;
 }
 
 [data-theme="dark"] .task-cards strong {
-  color: #b2bec3;
+  color: #cccccc;
 }
 
 [data-theme="dark"] .task-cards .due-date {
-  color: #ff7675;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  color: #ff6b6b;
 }

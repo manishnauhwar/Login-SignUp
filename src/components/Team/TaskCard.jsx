@@ -1,9 +1,11 @@
 import React, { useContext } from "react";
 import { useDrag } from "react-dnd";
-import "./ManagerTaskCard.css";
 import { ThemeContext } from "../../utils/ThemeContext";
+import "./TaskCard.css";
+import axiosInstance from "../../utils/axiosInstance";
+import { useNotifications } from "../../utils/NotificationContext";
 
-const ITEM_TYPE = "ASSIGNED_TASK";
+const ITEM_TYPE = "TASK";
 
 const getPriorityIcon = (priority) => {
   switch (priority) {
@@ -42,27 +44,65 @@ const formatDate = (dateString) => {
   });
 };
 
-const ManagerTaskCard = ({ task }) => {
+const TaskCard = ({ task, onDelete }) => {
   const { theme } = useContext(ThemeContext);
+  const { createNotification } = useNotifications();
   const [{ isDragging }, drag] = useDrag(() => ({
     type: ITEM_TYPE,
-    item: { id: task._id },
+    item: { _id: task._id },
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
   }));
 
+  const handleDelete = async () => {
+    try {
+      await axiosInstance.delete(`/tasks/${task._id}`);
+      createNotification({
+        type: 'task_deleted',
+        title: 'Task Deleted',
+        message: `Task "${task.title}" has been deleted`,
+        recipient: task.assignedTo || task.userId,
+        sender: JSON.parse(localStorage.getItem('user')).id,
+        link: '/tasks'
+      });
+      if (onDelete) {
+        onDelete(task._id);
+      }
+    } catch (error) {
+      console.error("Error deleting task:", error);
+      createNotification({
+        type: 'task_updated',
+        title: 'Error',
+        message: 'Failed to delete task',
+        recipient: JSON.parse(localStorage.getItem('user')).id,
+        sender: JSON.parse(localStorage.getItem('user')).id
+      });
+    }
+  };
+
   return (
     <div
       ref={drag}
-      className="task-card"
+      className="task-cards"
       data-theme={theme}
       style={{
         opacity: isDragging ? 0.5 : 1,
-        cursor: "grab",
+        cursor: "grab"
       }}
     >
-      <h3>{task.title}</h3>
+      <div className="task-header">
+        <h3>{task.title}</h3>
+        {(task.userRole === 'admin' || task.userRole === 'manager') && (
+          <button
+            className="delete-button"
+            onClick={handleDelete}
+            title="Delete task"
+          >
+            ×
+          </button>
+        )}
+      </div>
       <div className="date-container">
         <i className="fa-regular fa-calendar"></i>
         <span>{formatDate(task.dueDate)}</span>
@@ -81,4 +121,4 @@ const ManagerTaskCard = ({ task }) => {
   );
 };
 
-export default ManagerTaskCard;
+export default TaskCard;

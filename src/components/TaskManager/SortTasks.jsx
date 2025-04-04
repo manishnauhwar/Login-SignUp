@@ -14,25 +14,26 @@ const SortTasks = ({ tasks = [], setTasks, fullData, setFullData }) => {
   const handleFilter = (e) => {
     const value = e.target.value;
     setFilter(value);
+    console.log(value)
     const filteredTasks =
       value === "None"
         ? fullData
         : fullData.filter((task) => {
-            switch (value) {
-              case "Completed":
-                return task.status === "Completed";
-              case "Pending":
-                return task.status === "Pending";
-              case "Overdue":
-                return task.dueDate && new Date(task.dueDate) < new Date();
-              case "High":
-              case "Medium":
-              case "Low":
-                return task.priority === value;
-              default:
-                return true;
-            }
-          });
+          switch (value) {
+            case "Completed":
+              return task.status === "Completed";
+            case "Pending":
+              return task.status === "In progress" || task.status === "To Do";
+            case "Overdue":
+              return task.dueDate && new Date(task.dueDate) > new Date();
+            case "High":
+            case "Medium":
+            case "Low":
+              return task.priority === value;
+            default:
+              return true;
+          }
+        });
     setTasks(filteredTasks);
   };
 
@@ -43,7 +44,9 @@ const SortTasks = ({ tasks = [], setTasks, fullData, setFullData }) => {
       if (sortType === "priority") {
         compareValue = priorityOrder[a.priority] - priorityOrder[b.priority];
       } else {
-        compareValue = new Date(a.dueDate) - new Date(b.dueDate);
+        const dateA = b.dueDate ? new Date(b.dueDate) : new Date('9999-12-31');
+        const dateB = a.dueDate ? new Date(a.dueDate) : new Date('9999-12-31');
+        compareValue = dateA - dateB;
       }
       return sortOrder === "asc" ? compareValue : -compareValue;
     });

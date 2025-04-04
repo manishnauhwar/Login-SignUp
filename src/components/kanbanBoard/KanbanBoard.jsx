@@ -16,13 +16,16 @@ const KanbanBoard = () => {
   const { theme } = useContext(ThemeContext);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [tasks, setTasks] = useState([]);
+  const [allTasks, setAllTasks] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [userRole, setUserRole] = useState(null);
   const [userId, setUserId] = useState(null);
+  const [teamMembers, setTeamMembers] = useState([]);
   const [newTaskData, setNewTaskData] = useState({
     title: "",
     description: "",
     dueDate: "",
-    priority: "Medium",
+    priority: "Low",
     status: "pending",
     createdAt: new Date().toISOString().split("T")[0],
     assignedTo: "",
@@ -37,28 +40,87 @@ const KanbanBoard = () => {
     const userData = JSON.parse(localStorage.getItem("user"));
     if (userData) {
       setUserRole(userData.role);
-      setUserId(userData.id);
+      setUserId(userData._id || userData.id);
     }
   }, []);
 
   useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        const response = await axiosInstance.get("/tasks");
-        const allTasksData = response.data;
-
-        if (userRole === "user") {
-          const userTasks = allTasksData.filter(task => task.assignedTo === userId);
-          setTasks(userTasks);
-        } else {
-          setTasks(allTasksData);
+    const fetchTeamMembers = async () => {
+      if (userRole === 'manager') {
+        try {
+          const response = await axiosInstance.get('/teams');
+          const teams = response.data;
+          const userTeam = teams.find(team => team.manager._id === userId);
+          if (userTeam) {
+            setTeamMembers(userTeam.members.map(member => member._id));
+          }
+        } catch (error) {
+          console.error('Error fetching team members:', error);
         }
-      } catch (error) {
-        console.error("Error fetching tasks:", error);
       }
     };
-    fetchTasks();
-  }, [userRole, userId]);
+
+    if (userId && userRole) {
+      fetchTeamMembers();
+    }
+  }, [userId, userRole]);
+
+  const fetchTasks = async () => {
+    try {
+      const response = await axiosInstance.get("/tasks");
+      const data = response.data || [];
+      const userData = JSON.parse(localStorage.getItem("user"));
+      const userId = userData._id || userData.id;
+
+      const transformedTasks = data.map(task => ({
+        _id: task._id,
+        title: task.title,
+        description: task.description,
+        status: task.status,
+        priority: task.priority,
+        dueDate: new Date(task.dueDate).toISOString().split('T')[0],
+        createdAt: new Date(task.createdAt).toISOString().split('T')[0],
+        assignedTo: task.assignedTo || '',
+        userId: task.userId
+      }));
+
+      let filteredTasks = transformedTasks;
+      if (userRole === "user") {
+        filteredTasks = transformedTasks.filter(task =>
+          task.assignedTo === userId || task.userId === userId
+        );
+      } else if (userRole === "manager") {
+        filteredTasks = transformedTasks.filter(task =>
+          task.assignedTo === userId || task.userId === userId || teamMembers.includes(task.assignedTo)
+        );
+      }
+
+      setAllTasks(filteredTasks);
+      setTasks(filteredTasks);
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (userId && userRole) {
+      fetchTasks();
+    }
+  }, [userId, userRole, teamMembers]);
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setTasks(allTasks);
+    } else {
+      const lowercaseQuery = searchQuery.toLowerCase();
+      const filtered = allTasks.filter(task =>
+        task.title.toLowerCase().includes(lowercaseQuery) ||
+        task.description.toLowerCase().includes(lowercaseQuery) ||
+        task.priority.toLowerCase().includes(lowercaseQuery)
+      );
+      setTasks(filtered);
+    }
+  }, [searchQuery, allTasks]);
 
   const handleLogout = () => {
     logout();
@@ -75,21 +137,10 @@ const KanbanBoard = () => {
 
       if (userRole === "admin" || userRole === "manager") {
         await axiosInstance.patch(`/tasks/${taskId}`, { status: newStatus });
-        setTasks((prevTasks) =>
-          prevTasks.map((task) =>
-            task._id === taskId ? { ...task, status: newStatus } : task
-          )
-        );
-        return;
-      }
-
-      if (task.assignedTo === userId || task.userId === userId) {
+        fetchTasks();
+      } else if (task.assignedTo === userId || task.userId === userId) {
         await axiosInstance.patch(`/tasks/${taskId}`, { status: newStatus });
-        setTasks((prevTasks) =>
-          prevTasks.map((task) =>
-            task._id === taskId ? { ...task, status: newStatus } : task
-          )
-        );
+        fetchTasks();
       } else {
         console.error("User is not authorized to modify this task");
       }
@@ -104,29 +155,29 @@ const KanbanBoard = () => {
   };
 
   const addTask = async () => {
-    if (!newTaskData.title.trim() || !newTaskData.dueDate.trim()) return;
-
-    const [year, month, day] = newTaskData.dueDate.split('-');
-    const formattedDate = `${day}-${month}-${year}`;
-
+    const userData = JSON.parse(localStorage.getItem("user"));
+    const userId = userData._id || userData.id;
     const taskData = {
-      ...newTaskData,
-      dueDate: formattedDate,
+      title: newTaskData.title.trim(),
+      description: newTaskData.description.trim() || "No description provided",
+      dueDate: newTaskData.dueDate,
+      priority: newTaskData.priority,
       status: "To Do",
-      createdAt: new Date().toISOString().split("T")[0],
-      assignedTo: userRole === "user" ? userId : newTaskData.assignedTo
+      createdAt: new Date().toISOString(),
+      assignedTo: userRole === "user" ? userId : newTaskData.assignedTo || userId,
+      userId: userId
     };
 
     try {
       const response = await axiosInstance.post("/tasks/post", taskData);
       if (response.data) {
-        setTasks((prev) => [...prev, response.data]);
+        fetchTasks();
         setShowModal(false);
         setNewTaskData({
           title: "",
           description: "",
           dueDate: "",
-          priority: "Medium",
+          priority: "Low",
           status: "To Do",
           createdAt: new Date().toISOString().split("T")[0],
           assignedTo: "",
@@ -136,6 +187,7 @@ const KanbanBoard = () => {
       }
     } catch (error) {
       console.error("Error adding task:", error);
+      alert(error.response?.data?.message || "Failed to add task. Please try again.");
     }
   };
 
@@ -143,26 +195,21 @@ const KanbanBoard = () => {
     const [{ isOver }, drop] = useDrop(() => ({
       accept: "TASK",
       drop: (item) => {
-        console.log('Dropping task:', item);
         moveTask(item._id, statusFilter);
       },
       collect: (monitor) => ({ isOver: !!monitor.isOver() }),
     }));
 
-    const filteredTasks = tasks.filter((task) => {
-      const statusMatch = task.status === statusFilter;
-      if (userRole === "user") {
-        return statusMatch && task.assignedTo === userId;
-      }
-      return statusMatch;
-    });
+    const filteredTasks = tasks.filter((task) => task.status === statusFilter).reverse();
 
     return (
       <div className={`column ${isOver ? 'column-over' : ''}`} ref={drop}>
         <h3>{title}</h3>
-        {filteredTasks.map((task) => (
-          <TaskCards key={task._id} task={task} />
-        ))}
+        <div className="task-card-container">
+          {filteredTasks.map((task) => (
+            <TaskCards key={task._id} task={task} />
+          ))}
+        </div>
       </div>
     );
   };
@@ -171,7 +218,12 @@ const KanbanBoard = () => {
     <div className="home-container" data-theme={theme}>
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
       <div className={`main-content ${isSidebarOpen ? "sidebar-open" : "sidebar-closed"}`} data-theme={theme}>
-        <Navbar handleLogout={handleLogout} isSidebarOpen={isSidebarOpen} />
+        <Navbar
+          handleLogout={handleLogout}
+          isSidebarOpen={isSidebarOpen}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+        />
         <Main />
         <div className="kanban-content">
           <div className="view-toggle">

@@ -20,6 +20,7 @@ const TaskManagement = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [user, setUser] = useState(null);
+  const [teamMembers, setTeamMembers] = useState([]);
 
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem('user'));
@@ -27,6 +28,27 @@ const TaskManagement = () => {
       setUser(storedUser);
     }
   }, []);
+
+  useEffect(() => {
+    const fetchTeamMembers = async () => {
+      if (user?.role === 'manager') {
+        try {
+          const response = await axiosInstance.get('/teams');
+          const teams = response.data;
+          const userTeam = teams.find(team => team.manager._id === user.id);
+          if (userTeam) {
+            setTeamMembers(userTeam.members.map(member => member._id));
+          }
+        } catch (error) {
+          console.error('Error fetching team members:', error);
+        }
+      }
+    };
+
+    if (user) {
+      fetchTeamMembers();
+    }
+  }, [user]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -46,9 +68,22 @@ const TaskManagement = () => {
           userId: task.userId
         }));
 
-        setTasks(transformedTasks);
-        setOriginaltasks(transformedTasks);
-        setAllTasks(transformedTasks);
+        let filteredTasks = transformedTasks;
+        const userId = user._id || user.id; 
+
+        if (user?.role === "user") {
+          filteredTasks = transformedTasks.filter(task =>
+            task.assignedTo === userId || task.userId === userId
+          );
+        } else if (user?.role === "manager") {
+          filteredTasks = transformedTasks.filter(task =>
+            task.assignedTo === userId || task.userId === userId || teamMembers.includes(task.assignedTo)
+          );
+        }
+
+        setTasks(filteredTasks);
+        setOriginaltasks(filteredTasks);
+        setAllTasks(filteredTasks);
       } catch (error) {
         console.error('Error fetching tasks:', error);
         setTasks([]);
@@ -58,8 +93,11 @@ const TaskManagement = () => {
         setLoading(false);
       }
     };
-    fetchData();
-  }, []);
+
+    if (user) {
+      fetchData();
+    }
+  }, [user, teamMembers]);
 
   useEffect(() => {
     const filteredTasks = searchQuery
@@ -86,19 +124,23 @@ const TaskManagement = () => {
           setSearchQuery={setSearchQuery}
         />
         <Main />
-        <SortTasks tasks={tasks} setTasks={setTasks} fullData={allTasks} setFullData={setAllTasks} />
-        <div className='data-table'>
-          {loading ? (
-            <p>Loading...</p>
-          ) : (
-            <DueDateTableWithModal
-              tasks={tasks}
-              setTasks={setTasks}
-              searchQuery={searchQuery}
-              userId={user?.id}
-              userRole={user?.role}
-            />
-          )}
+        <div className="task-management-content">
+          <div className="sort-filter-container">
+            <SortTasks tasks={tasks} setTasks={setTasks} fullData={allTasks} setFullData={setAllTasks} />
+          </div>
+          <div className="data-table">
+            {loading ? (
+              <p>Loading...</p>
+            ) : (
+              <DueDateTableWithModal
+                tasks={tasks}
+                setTasks={setTasks}
+                searchQuery={searchQuery}
+                userId={user?._id || user?.id}
+                userRole={user?.role}
+              />
+            )}
+          </div>
         </div>
       </div>
     </div>

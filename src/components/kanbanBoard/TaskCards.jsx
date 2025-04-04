@@ -47,8 +47,7 @@ const TaskCards = ({ task }) => {
       data-theme={theme}
       style={{
         opacity: isDragging ? 0.5 : 1,
-        cursor: "grab",
-        backgroundColor: isDragging ? "#f0f0f0" : "white"
+        cursor: isDragging ? "grabbing" : "grab"
       }}
     >
       <h3>{task.title}</h3>

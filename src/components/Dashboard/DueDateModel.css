@@ -59,6 +59,15 @@
   position: relative;
 }
 
+.table-box::-webkit-scrollbar {
+  display: none;
+}
+
+.table-box {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
 .due-date-table {
   width: 100%;
   border-collapse: collapse;
@@ -71,7 +80,7 @@
   top: 0;
   background: #343a40;
   color: white;
-  z-index: 100; 
+  z-index: 100;
 }
 
 .due-date-table th {
@@ -80,7 +89,7 @@
   border: 1px solid #ddd;
   text-align: center;
   font-size: 15px;
-  z-index: 100; 
+  z-index: 100;
 }
 
 .due-date-table th,
@@ -170,7 +179,6 @@
   }
 }
 
-/* Modal Styling */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -204,7 +212,7 @@
 .modal-content select {
   width: 100%;
   padding: 10px;
-  margin-bottom: 12px;
+  margin-bottom: 20px;
   border: 1px solid #ccc;
   border-radius: 8px;
   font-size: 15px;
@@ -241,6 +249,7 @@
 .modal-close-btn:hover {
   color: #dc3545;
 }
+
 .comment-input {
   width: 100%;
   padding: 5px;
@@ -253,6 +262,7 @@
 .comment-input:focus {
   outline: none;
 }
+
 .custom-toggle {
   width: 60px;
   height: 30px;
@@ -266,11 +276,11 @@
 }
 
 .custom-toggle.completed {
-  background-color: #28a745; 
+  background-color: #28a745;
 }
 
 .custom-toggle.pending {
-  background-color: #dc3545; 
+  background-color: #dc3545;
 }
 
 .toggle-circle {
@@ -289,4 +299,3 @@
 .custom-toggle.pending .toggle-circle {
   transform: translateX(0px);
 }
-
