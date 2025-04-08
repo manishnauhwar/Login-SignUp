@@ -305,6 +305,7 @@ const DueDateModel = ({ tasks = [], setTasks, searchQuery, userId, userRole }) =
                 <option value="Completed">{t('statuses.Completed')}</option>
               </select>
               <textarea
+                className="task-description-input"
                 placeholder={t('taskDescription')}
                 value={modalState.editedTask.description}
                 onChange={(e) => setModalState((prev) => ({ ...prev, editedTask: { ...prev.editedTask, description: e.target.value } }))}

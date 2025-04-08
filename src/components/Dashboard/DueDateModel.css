@@ -322,3 +322,39 @@
 .custom-toggle.pending .toggle-circle {
   transform: translateX(0px);
 }
+
+.model textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d9e6;
+  border-radius: 8px;
+  font-size: 15px;
+  resize: vertical;
+  min-height: 100px;
+  margin-bottom: 15px;
+  transition: all 0.3s ease;
+}
+
+.model textarea:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.task-description-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d9e6;
+  border-radius: 8px;
+  font-size: 15px;
+  resize: vertical;
+  min-height: 100px;
+  margin-bottom: 15px;
+  transition: all 0.3s ease;
+}
+
+.task-description-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
