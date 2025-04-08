@@ -13,12 +13,14 @@ import { useNotifications } from "../../utils/NotificationContext";
 import { ThemeContext } from "../../utils/ThemeContext";
 import axiosInstance from "../../utils/axiosInstance";
 import TeamMembersModal from "../Profile/TeamMembersModal";
+import ToastContainer from "../Toast/ToastContainer";
+import { useTranslation } from "react-i18next";
 
 const Teams = () => {
   const navigate = useNavigate();
   const { createNotification } = useNotifications();
   const { theme } = useContext(ThemeContext);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [teams, setTeams] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
@@ -27,6 +29,21 @@ const Teams = () => {
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState({ show: false, teamId: null });
   const [isViewMembersModalOpen, setIsViewMembersModalOpen] = useState(false);
+  const [toasts, setToasts] = useState([]);
+  const { t } = useTranslation();
+
+  const addToast = (message, type = "info") => {
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, message, type }]);
+
+    setTimeout(() => {
+      removeToast(id);
+    }, 3000);
+  };
+
+  const removeToast = (id) => {
+    setToasts(prev => prev.filter(toast => toast.id !== id));
+  };
 
   useEffect(() => {
     const fetchTeams = async () => {
@@ -44,6 +61,8 @@ const Teams = () => {
             recipient: userId,
             sender: userId
           });
+
+          addToast("Failed to fetch teams", "error");
         }
       }
     };
@@ -63,6 +82,8 @@ const Teams = () => {
             recipient: userId,
             sender: userId
           });
+
+          addToast("Failed to fetch tasks", "error");
         }
       }
     };
@@ -109,9 +130,7 @@ const Teams = () => {
       prevTeams.map(team => team._id === updatedTeam._id ? updatedTeam : team)
     );
 
-    // Notify about team update via localStorage
     localStorage.setItem('teamUpdated', Date.now().toString());
-    // Trigger event for same-page updates
     window.dispatchEvent(new StorageEvent('storage', {
       key: 'teamUpdated',
       newValue: Date.now().toString()
@@ -126,6 +145,8 @@ const Teams = () => {
         recipient: userId,
         sender: userId
       });
+
+      addToast(`Team "${updatedTeam.name}" has been updated`, "success");
     }
   };
 
@@ -156,6 +177,8 @@ const Teams = () => {
           recipient: userId,
           sender: userId
         });
+
+        addToast("Team has been deleted", "success");
       }
     } catch (error) {
       console.error("Error deleting team:", error);
@@ -168,6 +191,8 @@ const Teams = () => {
           recipient: userId,
           sender: userId
         });
+
+        addToast("Failed to delete team", "error");
       }
     } finally {
       setConfirmDelete({ show: false, teamId: null });
@@ -196,6 +221,8 @@ const Teams = () => {
         recipient: userId,
         sender: userId
       });
+
+      addToast(`Team "${newTeam.name}" has been created`, "success");
     }
   };
 
@@ -204,6 +231,7 @@ const Teams = () => {
       const assignedTeam = teams.find((team) => team._id === teamId);
       if (!assignedTeam) {
         console.error('Team not found:', teamId);
+        addToast("Team not found", "error");
         throw new Error("Team not found");
       }
 
@@ -250,6 +278,8 @@ const Teams = () => {
           recipient: managerId,
           sender: userId
         });
+
+        addToast(`Task "${response.data.title}" assigned to ${assignedTeam.name}`, "success");
       }
     } catch (error) {
       console.error("Error assigning task:", error);
@@ -262,6 +292,8 @@ const Teams = () => {
           recipient: userId,
           sender: userId
         });
+
+        addToast("Failed to assign task", "error");
       }
     }
   };
@@ -277,7 +309,6 @@ const Teams = () => {
   const isAdmin = currentUser?.role === 'admin';
 
   const handleViewMembers = (team) => {
-    console.log("Selected team for viewing members:", team);
     setSelectedTeam(team);
     setIsViewMembersModalOpen(true);
   };
@@ -286,6 +317,7 @@ const Teams = () => {
     <div className="home-container" data-theme={theme}>
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
       <div className={`main-content ${isSidebarOpen ? "sidebar-open" : "sidebar-closed"}`} data-theme={theme}>
+        <ToastContainer toasts={toasts} removeToast={removeToast} />
         <Navbar handleLogout={handleLogout} isSidebarOpen={isSidebarOpen} />
         <Main />
         <div className="split-screen">
@@ -301,13 +333,13 @@ const Teams = () => {
           </div>
           <div className="team-section-container">
             <div className="team-section-header">
-              <h2 className="team-section-heading">Teams</h2>
+              <h2 className="team-section-heading">{t("teams")}</h2>
               {isAdmin && (
                 <button
                   className="create-team-btn"
                   onClick={handleOpenCreateModal}
                 >
-                  + Create Team
+                  + {t("createTeam")}
                 </button>
               )}
             </div>
@@ -327,7 +359,7 @@ const Teams = () => {
                     />
                   ))
                 ) : (
-                  <p className="no-teams-message">No teams available</p>
+                  <p className="no-teams-message">{t("noTeamsAvailable")}</p>
                 )}
               </div>
             </div>
@@ -338,11 +370,11 @@ const Teams = () => {
       {confirmDelete.show && (
         <div className="confirm-delete-overlay">
           <div className="confirm-delete-modal" data-theme={theme}>
-            <h3>Confirm Delete</h3>
-            <p>Are you sure you want to delete this team? This action cannot be undone.</p>
+            <h3>{t("confirmDelete")}</h3>
+            <p>{t("confirmDeleteTeamMessage")}</p>
             <div className="confirm-delete-actions">
-              <button onClick={cancelDeleteTeam} className="cancel-delete-btn">Cancel</button>
-              <button onClick={confirmDeleteTeam} className="confirm-delete-btn">Delete</button>
+              <button onClick={cancelDeleteTeam} className="cancel-delete-btn">{t("cancel")}</button>
+              <button onClick={confirmDeleteTeam} className="confirm-delete-btn">{t("delete")}</button>
             </div>
           </div>
         </div>

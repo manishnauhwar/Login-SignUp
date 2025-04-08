@@ -3,13 +3,14 @@ import { Link, useNavigate } from "react-router-dom";
 import img from "../../assets/img.webp";
 import GoogleAuth from "../login/GoogleAuth";
 import "./GoogleAuth.css";
-import FacebookAuth from "../login/FacebookAuth";
-import "./FacebookAuth.css";
 import axiosInstance from "../../utils/axiosInstance";
 import { setAuthData } from "../../utils/auth";
+import { useTranslation } from "react-i18next";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
+
   const [formState, setFormState] = useState({
     email: "",
     password: "",
@@ -36,8 +37,8 @@ const Login = () => {
       errors: {
         ...prev.errors,
         [name]: name === 'email'
-          ? (validateEmail(value) ? "" : "Invalid email format")
-          : (validatePassword(value) ? "" : "Password must be at least 6 characters")
+          ? (validateEmail(value) ? "" : t("invalidEmailFormat"))
+          : (validatePassword(value) ? "" : t("passwordMinLength"))
       }
     }));
   };
@@ -53,8 +54,8 @@ const Login = () => {
       setFormState(prev => ({
         ...prev,
         errors: {
-          email: emailValid ? "" : "Enter a valid email",
-          password: passwordValid ? "" : "Password must be at least 6 characters"
+          email: emailValid ? "" : t("invalidEmailFormat"),
+          password: passwordValid ? "" : t("passwordMinLength")
         }
       }));
       return;
@@ -75,7 +76,7 @@ const Login = () => {
     } catch (error) {
       console.error("Error during login:", error);
 
-      let errorMessage = "An error occurred. Please try again.";
+      let errorMessage = t("errorOccurred");
 
       if (error.code === 'ERR_NETWORK') {
         errorMessage = "Unable to connect to server. Please check your internet connection.";
@@ -100,17 +101,17 @@ const Login = () => {
       <div className="login-left">
         <img src={img} alt="Background" className="login-img" />
         <div className="overlay-text">
-          <h1>Welcome Back</h1>
-          <p>Log in to continue.</p>
+          <h1>{t("welcomeBack")}</h1>
+          <p>{t("logInToContinue")}</p>
         </div>
       </div>
 
       <div className="login-right">
-        <h2>Login</h2>
+        <h2>{t("login")}</h2>
         <p>
-          Don't have an account?{" "}
+          {t("dontHaveAccount")}{" "}
           <Link to="/Signup" className="link">
-            Signup
+            {t("signup")}
           </Link>
         </p>
 
@@ -118,7 +119,7 @@ const Login = () => {
           <input
             type="email"
             name="email"
-            placeholder="Email"
+            placeholder={t("email")}
             value={formState.email}
             onChange={handleInputChange}
             className={`input ${formState.errors.email ? "input-error" : ""}`}
@@ -128,27 +129,30 @@ const Login = () => {
           <input
             type="password"
             name="password"
-            placeholder="Password"
+            placeholder={t("password")}
             value={formState.password}
             onChange={handleInputChange}
             className={`input ${formState.errors.password ? "input-error" : ""}`}
           />
           {formState.errors.password && <p className="error-text">{formState.errors.password}</p>}
 
-          <Link to="/forgot-password" className="forgot-password">Forgot Password?</Link>
+          <Link to="/forgot-password" className="forgot-password">{t("forgotPassword")}</Link>
 
           <button
             type="submit"
             className="btn-primary"
             disabled={!isFormValid}
           >
-            Login
+            {t("login")}
           </button>
         </form>
 
+        <div className="or-separator">
+          <span>{t("or")}</span>
+        </div>
+
         <div className="social-login-container">
           <GoogleAuth />
-          <FacebookAuth />
         </div>
       </div>
     </div>

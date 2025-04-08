@@ -3,12 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import img from "../../assets/img.webp";
 import GoogleAuth from "./GoogleAuth";
 import "./GoogleAuth.css";
-import FacebookAuth from "./FacebookAuth";
-import "./FacebookAuth.css";
 import axiosInstance from "../../utils/axiosInstance";
+import { useTranslation } from "react-i18next";
 
 const Signup = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
+
   const [formState, setFormState] = useState({
     fullname: "",
     email: "",
@@ -43,13 +44,13 @@ const Signup = () => {
       errors: {
         ...prev.errors,
         [name]: name === 'email'
-          ? (validateEmail(value) ? "" : "Invalid email format")
+          ? (validateEmail(value) ? "" : t("invalidEmailFormat"))
           : name === 'fullname'
-            ? (validatefullname(value) ? "" : "fullname must be at least 3 characters")
+            ? (validatefullname(value) ? "" : t("fullnameMinLength"))
             : name === 'password'
-              ? (validatePassword(value) ? "" : "Password must be at least 6 characters")
+              ? (validatePassword(value) ? "" : t("passwordMinLength"))
               : name === 'confirmPassword'
-                ? (value === formState.password ? "" : "Passwords do not match")
+                ? (value === formState.password ? "" : t("passwordsDoNotMatch"))
                 : ""
       }
     }));
@@ -67,21 +68,16 @@ const Signup = () => {
       setFormState(prev => ({
         ...prev,
         errors: {
-          fullname: fullnameValid ? "" : "fullname must be at least 3 characters",
-          email: emailValid ? "" : "Enter a valid email",
-          password: passwordValid ? "" : "Password must be at least 6 characters",
-          confirmPassword: passwordsMatch ? "" : "Passwords do not match"
+          fullname: fullnameValid ? "" : t("fullnameMinLength"),
+          email: emailValid ? "" : t("invalidEmailFormat"),
+          password: passwordValid ? "" : t("passwordMinLength"),
+          confirmPassword: passwordsMatch ? "" : t("passwordsDoNotMatch")
         }
       }));
       return;
     }
 
     try {
-      console.log('Attempting signup with:', {
-        fullname: formState.fullname,
-        email: formState.email,
-        password: formState.password
-      });
 
       const response = await axiosInstance.post("/users/signup", {
         fullname: formState.fullname,
@@ -89,7 +85,6 @@ const Signup = () => {
         password: formState.password
       });
 
-      console.log('Signup response:', response.data);
 
       if (response.status === 200 || response.status === 201) {
         try {
@@ -98,7 +93,6 @@ const Signup = () => {
             password: formState.password
           });
 
-          console.log('Login response after signup:', loginResponse.data);
 
           if (loginResponse.data && loginResponse.data.token) {
             localStorage.setItem("accessToken", loginResponse.data.token);
@@ -121,7 +115,7 @@ const Signup = () => {
     } catch (error) {
       console.error("Error during signup:", error);
 
-      let errorMessage = "An error occurred. Please try again.";
+      let errorMessage = t("errorOccurred");
 
       if (error.code === 'ERR_NETWORK') {
         errorMessage = "Unable to connect to server. Please check if the backend server is running.";
@@ -151,17 +145,17 @@ const Signup = () => {
       <div className="login-left">
         <img src={img} alt="Background" className="login-img" />
         <div className="overlay-text">
-          <h1>Create Account</h1>
-          <p>Join us today!</p>
+          <h1>{t("createAccount")}</h1>
+          <p>{t("joinUsToday")}</p>
         </div>
       </div>
 
       <div className="login-right">
-        <h2>Sign Up</h2>
+        <h2>{t("signUp")}</h2>
         <p>
-          Already have an account?{" "}
+          {t("alreadyHaveAccount")}{" "}
           <Link to="/login" className="link">
-            Login
+            {t("login")}
           </Link>
         </p>
 
@@ -169,7 +163,7 @@ const Signup = () => {
           <input
             type="text"
             name="fullname"
-            placeholder="fullname"
+            placeholder={t("fullname")}
             value={formState.fullname}
             onChange={handleInputChange}
             className={`input ${formState.errors.fullname ? "input-error" : ""}`}
@@ -179,7 +173,7 @@ const Signup = () => {
           <input
             type="email"
             name="email"
-            placeholder="Email"
+            placeholder={t("email")}
             value={formState.email}
             onChange={handleInputChange}
             className={`input ${formState.errors.email ? "input-error" : ""}`}
@@ -189,7 +183,7 @@ const Signup = () => {
           <input
             type="password"
             name="password"
-            placeholder="Password"
+            placeholder={t("password")}
             value={formState.password}
             onChange={handleInputChange}
             className={`input ${formState.errors.password ? "input-error" : ""}`}
@@ -199,7 +193,7 @@ const Signup = () => {
           <input
             type="password"
             name="confirmPassword"
-            placeholder="Confirm Password"
+            placeholder={t("confirmPassword")}
             value={formState.confirmPassword}
             onChange={handleInputChange}
             className={`input ${formState.errors.confirmPassword ? "input-error" : ""}`}
@@ -211,13 +205,16 @@ const Signup = () => {
             className="btn-primary"
             disabled={!isFormValid}
           >
-            Sign Up
+            {t("signUp")}
           </button>
         </form>
 
+        <div className="or-separator">
+          <span>{t("or")}</span>
+        </div>
+
         <div className="social-login-container">
           <GoogleAuth />
-          <FacebookAuth />
         </div>
       </div>
     </div>

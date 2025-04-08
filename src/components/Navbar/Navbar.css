@@ -127,9 +127,7 @@
 }
 
 .notification-btn {
-  background: rgba(93, 176, 221, 0.15);
   border: none;
-  font-size: 1.5rem;
   cursor: pointer;
   position: relative;
   z-index: 1051;
@@ -141,10 +139,12 @@
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
+  padding: 0;
+  margin: 0;
+  background: transparent;
 }
 
 .notification-btn:hover {
-  background: rgba(93, 176, 221, 0.25);
   color: #78C6FF;
   transform: translateY(-2px);
 }
@@ -152,12 +152,20 @@
 .notification-icon {
   font-size: 1.8rem;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  line-height: 1;
 }
 
 .notification-count {
   position: absolute;
-  top: -5px;
-  right: -5px;
+  top: -8px;
+  right: -8px;
   background: linear-gradient(135deg, #ff4d4f 0%, #f5222d 100%);
   color: white;
   font-size: 0.75rem;
@@ -168,6 +176,7 @@
   text-align: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   border: 1.5px solid white;
+  z-index: 1052;
 }
 
 .notification-dropdown {
@@ -384,11 +393,10 @@
 
 [data-theme="light"] .notification-btn {
   color: #3a5a7d;
-  background: rgba(0, 123, 255, 0.1);
+  background: transparent;
 }
 
 [data-theme="light"] .notification-btn:hover {
-  background: rgba(0, 123, 255, 0.2);
   color: #007bff;
 }
 
@@ -441,4 +449,14 @@
 [data-theme="light"] .search-bar:focus-within {
   box-shadow: 0px 0px 0px 3px rgba(0, 123, 255, 0.25);
   border-color: #007bff;
+}
+
+/* Dark theme styles */
+[data-theme="dark"] .notification-btn {
+  color: #fff;
+  background: transparent;
+}
+
+[data-theme="dark"] .notification-btn:hover {
+  color: #78C6FF;
 }

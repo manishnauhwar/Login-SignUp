@@ -10,11 +10,14 @@ import CalendarView from "./CalendarView";
 import { ThemeContext } from "../../utils/ThemeContext";
 import "./KanbanBoard.css";
 import axiosInstance from "../../utils/axiosInstance";
+import ToastContainer from "../Toast/ToastContainer";
+import { useTranslation } from "react-i18next";
 
 const KanbanBoard = () => {
   const navigate = useNavigate();
   const { theme } = useContext(ThemeContext);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const { t } = useTranslation();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [tasks, setTasks] = useState([]);
   const [allTasks, setAllTasks] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -35,6 +38,20 @@ const KanbanBoard = () => {
   const [showModal, setShowModal] = useState(false);
   const [view, setView] = useState("kanban");
   const [filterDate, setFilterDate] = useState("");
+  const [toasts, setToasts] = useState([]);
+
+  const addToast = (message, type = "info") => {
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, message, type }]);
+
+    setTimeout(() => {
+      removeToast(id);
+    }, 3000);
+  };
+
+  const removeToast = (id) => {
+    setToasts(prev => prev.filter(toast => toast.id !== id));
+  };
 
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem("user"));
@@ -138,14 +155,18 @@ const KanbanBoard = () => {
       if (userRole === "admin" || userRole === "manager") {
         await axiosInstance.patch(`/tasks/${taskId}`, { status: newStatus });
         fetchTasks();
+        addToast(`Task "${task.title}" moved to ${newStatus}`, "success");
       } else if (task.assignedTo === userId || task.userId === userId) {
         await axiosInstance.patch(`/tasks/${taskId}`, { status: newStatus });
         fetchTasks();
+        addToast(`Task "${task.title}" moved to ${newStatus}`, "success");
       } else {
         console.error("User is not authorized to modify this task");
+        addToast("You're not authorized to modify this task", "error");
       }
     } catch (error) {
       console.error("Error updating task status:", error);
+      addToast("Error updating task status", "error");
       if (error.response?.status === 401) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
@@ -184,10 +205,11 @@ const KanbanBoard = () => {
           completionTime: "",
           timeElapsed: 0
         });
+        addToast(`Task "${taskData.title}" created successfully`, "success");
       }
     } catch (error) {
       console.error("Error adding task:", error);
-      alert(error.response?.data?.message || "Failed to add task. Please try again.");
+      addToast(error.response?.data?.message || "Failed to add task", "error");
     }
   };
 
@@ -218,6 +240,7 @@ const KanbanBoard = () => {
     <div className="home-container" data-theme={theme}>
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
       <div className={`main-content ${isSidebarOpen ? "sidebar-open" : "sidebar-closed"}`} data-theme={theme}>
+        <ToastContainer toasts={toasts} removeToast={removeToast} />
         <Navbar
           handleLogout={handleLogout}
           isSidebarOpen={isSidebarOpen}
@@ -227,16 +250,16 @@ const KanbanBoard = () => {
         <Main />
         <div className="kanban-content">
           <div className="view-toggle">
-            <button onClick={() => setView("kanban")}>Kanban</button>
-            <button onClick={() => setView("calendar")}>Calendar</button>
-            <button className="add-task-btn" onClick={() => setShowModal(true)}>+ Add Task</button>
+            <button onClick={() => setView("kanban")}>{t('kanbanView')}</button>
+            <button onClick={() => setView("calendar")}>{t('calendarView')}</button>
+            <button className="add-task-btn" onClick={() => setShowModal(true)}>+ {t('addTask')}</button>
           </div>
           {view === "kanban" && (
             <>
               <div className="boardContainer">
-                <Column title="To Do" statusFilter="To Do" />
-                <Column title="In Progress" statusFilter="In progress" />
-                <Column title="Done" statusFilter="Completed" />
+                <Column title={t('toDo')} statusFilter="To Do" />
+                <Column title={t('inProgress')} statusFilter="In progress" />
+                <Column title={t('done')} statusFilter="Completed" />
               </div>
             </>
           )}
@@ -246,16 +269,16 @@ const KanbanBoard = () => {
         )}
         {showModal && (
           <div className="modal">
-            <input type="text" placeholder="Title" value={newTaskData.title} onChange={(e) => setNewTaskData({ ...newTaskData, title: e.target.value })} />
-            <textarea placeholder="Description" value={newTaskData.description} onChange={(e) => setNewTaskData({ ...newTaskData, description: e.target.value })}></textarea>
+            <input type="text" placeholder={t('title')} value={newTaskData.title} onChange={(e) => setNewTaskData({ ...newTaskData, title: e.target.value })} />
+            <textarea placeholder={t('taskDescription')} value={newTaskData.description} onChange={(e) => setNewTaskData({ ...newTaskData, description: e.target.value })}></textarea>
             <input type="date" value={newTaskData.dueDate} onChange={(e) => setNewTaskData({ ...newTaskData, dueDate: e.target.value })} />
             <select value={newTaskData.priority} onChange={(e) => setNewTaskData({ ...newTaskData, priority: e.target.value })}>
-              <option value="Low">Low</option>
-              <option value="Medium">Medium</option>
-              <option value="High">High</option>
+              <option value="Low">{t('priorities.Low')}</option>
+              <option value="Medium">{t('priorities.Medium')}</option>
+              <option value="High">{t('priorities.High')}</option>
             </select>
-            <button onClick={addTask}>Add Task</button>
-            <button onClick={() => setShowModal(false)}>Cancel</button>
+            <button onClick={addTask}>{t('addTask')}</button>
+            <button onClick={() => setShowModal(false)}>{t('cancel', 'Cancel')}</button>
           </div>
         )}
       </div>

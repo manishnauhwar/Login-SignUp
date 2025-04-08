@@ -14,7 +14,7 @@ export const getUser = () => {
 
 export const setAuthData = (token, user) => {
   localStorage.setItem("accessToken", token);
-  localStorage.setItem("token", token); 
+  localStorage.setItem("token", token);
   localStorage.setItem("user", JSON.stringify(user));
   window.dispatchEvent(new Event('auth-change'));
 };

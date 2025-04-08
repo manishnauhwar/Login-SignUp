@@ -5,10 +5,14 @@ import { RiTeamLine } from "react-icons/ri";
 import { LuKanban } from "react-icons/lu";
 import "./Sidebar.css";
 import { ThemeContext } from "../../utils/ThemeContext";
+import { LanguageContext } from "../../utils/LanguageContext";
+import { useTranslation } from "react-i18next";
 import defaultProfileImg from "../../assets/profile.png";
 
-const Sidebar = ({ isOpen, setIsOpen }) => {
-  const { theme, toggleTheme } = useContext(ThemeContext);
+const Sidebar = ({ isOpen = false, setIsOpen }) => {
+  const { theme } = useContext(ThemeContext);
+  const { translate } = useContext(LanguageContext);
+  const { t } = useTranslation();
   const [user, setUser] = useState(null);
   const location = useLocation();
 
@@ -32,32 +36,27 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
   const getMenuItems = () => {
     const commonItems = [
-      { path: '/dashboard', icon: <FaTachometerAlt className="icon" />, text: 'Dashboard' },
-      { path: '/task-management', icon: <FaTasks className="icon" />, text: 'Task Management' },
-      { path: '/kanbanboard', icon: <LuKanban className="icon" />, text: 'Kanban Board' },
-      { path: '/settings', icon: <FaCog className="icon" />, text: 'Settings' }
-
+      { path: '/dashboard', icon: <FaTachometerAlt className="icon" />, text: 'dashboard' },
+      { path: '/task-management', icon: <FaTasks className="icon" />, text: 'taskManagement' },
+      { path: '/kanbanboard', icon: <LuKanban className="icon" />, text: 'kanban' },
+      { path: '/settings', icon: <FaCog className="icon" />, text: 'settings' }
     ];
 
     if (!user) {
       return commonItems;
     }
 
-
     const roleItems = {
       admin: [
-        { path: '/users', icon: <FaUsers className="icon" />, text: 'Tasks Board' },
-        { path: '/team', icon: <RiTeamLine className="icon" />, text: 'Admin Panel' }
-
+        { path: '/users', icon: <FaUsers className="icon" />, text: 'users' },
+        { path: '/team', icon: <RiTeamLine className="icon" />, text: 'teams' }
       ],
       manager: [
-
-        { path: '/users', icon: <FaUsers className="icon" />, text: 'Task Board' },
-        { path: '/manager', icon: <FaUserCog className="icon" />, text: 'Manager Panel' }
+        { path: '/users', icon: <FaUsers className="icon" />, text: 'users' },
+        { path: '/manager', icon: <FaUserCog className="icon" />, text: 'manager' }
       ],
       user: [
-        { path: '/users', icon: <FaUsers className="icon" />, text: 'Task Board' }
-
+        { path: '/users', icon: <FaUsers className="icon" />, text: 'users' }
       ]
     };
 
@@ -74,7 +73,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         <button className="toggle-button" onClick={() => setIsOpen(!isOpen)}>
           <div className={`arrow ${isOpen ? "left" : "right"}`}></div>
         </button>
-        <h2 className="logo">{isOpen ? "Task Management" : ""}</h2>
+        <h2 className="logo">{isOpen ? t("taskManagement") : ""}</h2>
       </div>
       <div className="sidebar-list">
         {getMenuItems().map((item, index) => (
@@ -82,15 +81,16 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             key={index}
             to={item.path}
             className={`sidebar-item ${isActive(item.path) ? 'active' : ''}`}
+            onClick={(e) => e.stopPropagation()}
           >
             {item.icon}
-            <span className="link-text">{item.text}</span>
+            <span className="link-text">{t(item.text)}</span>
           </Link>
         ))}
       </div>
       {user && isOpen && (
         <div className="user-info">
-          <Link to="/profile" className="profile-link">
+          <Link to="/profile" className="profile-link" onClick={(e) => e.stopPropagation()}>
             <div className="sidebar-profile">
               <img
                 src={getProfilePictureUrl(user.profilePicture)}

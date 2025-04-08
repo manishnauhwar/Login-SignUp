@@ -2,11 +2,13 @@ import React, { useContext } from "react";
 import { useDrop } from "react-dnd";
 import "./TeamCard.css";
 import { ThemeContext } from "../../utils/ThemeContext";
+import { useTranslation } from "react-i18next";
 
 const ITEM_TYPE = "TASK";
 
 const TeamCard = ({ team, onDropTask, onEditTeam, onDeleteTeam, onViewMembers, isAdmin, isManager = false }) => {
   const { theme } = useContext(ThemeContext);
+  const { t } = useTranslation();
   const [{ isOver }, drop] = useDrop(() => ({
     accept: ITEM_TYPE,
     drop: (item) => {
@@ -37,14 +39,14 @@ const TeamCard = ({ team, onDropTask, onEditTeam, onDeleteTeam, onViewMembers, i
               <button
                 className="team-view-btn"
                 onClick={() => onViewMembers(team)}
-                title="View Members"
+                title={t("viewMembers")}
               >
                 <i className="fas fa-users"></i>
               </button>
               <button
                 className="team-edit-btn"
                 onClick={() => onEditTeam(team)}
-                title="Edit Team"
+                title={t("editTeam")}
               >
                 <i className="fas fa-edit"></i>
               </button>
@@ -54,7 +56,7 @@ const TeamCard = ({ team, onDropTask, onEditTeam, onDeleteTeam, onViewMembers, i
             <button
               className="team-delete-btn"
               onClick={() => onDeleteTeam(team._id)}
-              title="Delete Team"
+              title={t("delete")}
             >
               <i className="fas fa-trash-alt"></i>
             </button>
@@ -62,14 +64,14 @@ const TeamCard = ({ team, onDropTask, onEditTeam, onDeleteTeam, onViewMembers, i
         </div>
       </div>
       <p className="team-manager">
-        <strong>Manager:</strong> {team.manager.fullname}
+        <strong>{t("manager")}:</strong> {team.manager.fullname}
       </p>
       <table className="team-table">
         <thead>
           <tr className="team-table-header">
-            <th className="team-table-cell">Name</th>
-            <th className="team-table-cell">Email</th>
-            <th className="team-table-cell">Role</th>
+            <th className="team-table-cell">{t("name")}</th>
+            <th className="team-table-cell">{t("email")}</th>
+            <th className="team-table-cell">{t("role")}</th>
           </tr>
         </thead>
         <tbody>
@@ -83,14 +85,14 @@ const TeamCard = ({ team, onDropTask, onEditTeam, onDeleteTeam, onViewMembers, i
             ))
           ) : (
             <tr>
-              <td colSpan="3" className="team-table-cell">No members found.</td>
+              <td colSpan="3" className="team-table-cell">{t("noMembersFound")}</td>
             </tr>
           )}
         </tbody>
       </table>
       <div className="team-info">
         <p className="team-members-count">
-          <i className="fas fa-user"></i> {memberCount} {memberCount === 1 ? 'Member' : 'Members'}
+          <i className="fas fa-user"></i> {memberCount} {memberCount === 1 ? t("member") : t("members")}
         </p>
         {team.description && (
           <p className="team-description">{team.description}</p>

@@ -7,10 +7,11 @@ import Main from "../Title/Main";
 import "./User.css";
 import { ThemeContext } from "../../utils/ThemeContext";
 import axiosInstance from "../../utils/axiosInstance";
+import { useTranslation } from "react-i18next";
 
 const User = () => {
   const navigate = useNavigate();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [tasks, setTasks] = useState([]);
   const [allTasks, setAllTasks] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -18,6 +19,7 @@ const User = () => {
   const [users, setUsers] = useState([]);
   const [teamMembers, setTeamMembers] = useState([]);
   const { theme } = useContext(ThemeContext);
+  const { t } = useTranslation();
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -174,7 +176,7 @@ const User = () => {
     const foundUser = users.find((u) =>
       u._id === userId || u.id === userId
     );
-    return foundUser ? foundUser.fullname : "Unknown User";
+    return foundUser ? foundUser.fullname : t('unknown');
   };
 
   return (
@@ -190,7 +192,7 @@ const User = () => {
         <Main />
         <div className="cards-container">
           <div className="tasks-card">
-            <h2>My Tasks</h2>
+            <h2>{t('myTasks')}</h2>
             {tasks.length > 0 ? (
               <ul className="tasks-list">
                 {tasks.map(task => (
@@ -203,7 +205,7 @@ const User = () => {
                     </div>
                     <p className="task-description">{task.description}</p>
                     <div className="task-footer">
-                      <span className="due-date">Due: {formatDate(task.dueDate)}</span>
+                      <span className="due-date">{t('due')}: {formatDate(task.dueDate)}</span>
                       <span className={`status-badge ${task.status.toLowerCase()}`}>
                         {task.status}
                       </span>
@@ -218,7 +220,7 @@ const User = () => {
                 ))}
               </ul>
             ) : (
-              <p className="no-tasks">No tasks assigned to you.</p>
+              <p className="no-tasks">{t('noTasksAssignedToYou')}</p>
             )}
           </div>
         </div>

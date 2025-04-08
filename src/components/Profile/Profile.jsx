@@ -10,13 +10,18 @@ import { ThemeContext } from "../../utils/ThemeContext";
 import axiosInstance from "../../utils/axiosInstance";
 import UserModal from "../Profile/UserModal";
 import TeamMembersModal from "../Profile/TeamMembersModal";
+import TeamCreateModal from "../Team/TeamCreateModal";
 import { FaEdit } from 'react-icons/fa';
+import ToastContainer from "../Toast/ToastContainer";
+import { useTranslation } from "react-i18next";
+import DeleteConfirmationModal from './DeleteConfirmationModal';
 
 const UserProfile = () => {
   const navigate = useNavigate();
   const { theme } = useContext(ThemeContext);
+  const { t } = useTranslation();
   const [user, setUser] = useState(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({ fullname: "", email: "", password: "" });
   const [loading, setLoading] = useState(true);
@@ -33,30 +38,40 @@ const UserProfile = () => {
   const [lastRefresh, setLastRefresh] = useState(Date.now());
   const [showTeamMembersModal, setShowTeamMembersModal] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState(null);
-  // Profile picture state
+  const [showCreateTeamModal, setShowCreateTeamModal] = useState(false);
   const [showImgModal, setShowImgModal] = useState(false);
   const [profilePicture, setProfilePicture] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
   const fileInputRef = useRef(null);
+  const [toasts, setToasts] = useState([]);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
 
-  // Get the base URL for the API
+  const addToast = (message, type = "info") => {
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, message, type }]);
+
+    setTimeout(() => {
+      removeToast(id);
+    }, 3000);
+  };
+
+  const removeToast = (id) => {
+    setToasts(prev => prev.filter(toast => toast.id !== id));
+  };
+
   const getApiBaseUrl = () => {
-    // Get the base URL from the axios instance or construct it
     const baseURL = axiosInstance.defaults.baseURL || window.location.origin.replace('3000', '5000');
     return baseURL;
   };
 
-  // Function to get the full profile picture URL
   const getProfilePictureUrl = (relativePath) => {
     if (!relativePath) return profileImg;
 
-    // If it's a data URL (from preview), return as is
     if (relativePath.startsWith('data:')) return relativePath;
 
-    // If it's already an absolute URL, return as is
     if (relativePath.startsWith('http')) return relativePath;
 
-    // Otherwise, prepend the API base URL
     return getApiBaseUrl() + relativePath;
   };
 
@@ -230,6 +245,7 @@ const UserProfile = () => {
       if (!userId) {
         console.error('User ID is missing:', user);
         setError("User ID is missing. Please try logging in again.");
+        addToast("User ID is missing. Please try logging in again.", "error");
         return;
       }
 
@@ -270,6 +286,8 @@ const UserProfile = () => {
           setFormData(prev => ({ ...prev, password: '' }));
           setError(null);
 
+          addToast("Profile updated successfully", "success");
+
           window.location.reload();
           return;
         }
@@ -294,14 +312,18 @@ const UserProfile = () => {
       setFormData(prev => ({ ...prev, password: '' }));
       setError(null);
 
+      addToast("Profile updated successfully", "success");
+
       window.location.reload();
 
     } catch (err) {
       console.error("Error updating user:", err);
       if (err.response?.status === 404) {
         setError("User not found. Please try logging in again.");
+        addToast("User not found. Please try logging in again.", "error");
       } else {
         setError(err.response?.data?.message || "Failed to update user data. Please try again.");
+        addToast(err.response?.data?.message || "Failed to update user data. Please try again.", "error");
       }
     }
   };
@@ -312,14 +334,21 @@ const UserProfile = () => {
   };
 
   const handleDeleteUser = async (userId) => {
-    if (window.confirm("Are you sure you want to delete this user?")) {
-      try {
-        await axiosInstance.delete(`/users/${userId}`);
-        fetchAllUsers();
-      } catch (error) {
-        console.error("Error deleting user:", error);
-        alert("Failed to delete user. Please try again.");
-      }
+    setUserToDelete(userId);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteUser = async () => {
+    try {
+      await axiosInstance.delete(`/users/${userToDelete}`);
+      fetchAllUsers();
+      addToast("User deleted successfully", "success");
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      addToast("Failed to delete user", "error");
+    } finally {
+      setShowDeleteModal(false);
+      setUserToDelete(null);
     }
   };
 
@@ -340,8 +369,10 @@ const UserProfile = () => {
       setAllUsers(prevUsers => {
         const existing = prevUsers.find(u => u._id === userData._id);
         if (existing) {
+          addToast(`User ${userData.fullname} updated successfully`, "success");
           return prevUsers.map(u => u._id === userData._id ? userData : u);
         } else {
+          addToast(`User ${userData.fullname} added successfully`, "success");
           return [...prevUsers, userData];
         }
       });
@@ -367,9 +398,23 @@ const UserProfile = () => {
       key: 'teamUpdated',
       newValue: Date.now().toString()
     }));
+
+    addToast(`Team "${updatedTeam.name}" updated successfully`, "success");
   };
 
-  // Profile picture functions
+  const handleTeamCreated = (newTeam) => {
+    setManagerTeams(prevTeams => [...prevTeams, newTeam]);
+    setLastRefresh(Date.now());
+
+    localStorage.setItem('teamCreated', Date.now().toString());
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: 'teamCreated',
+      newValue: Date.now().toString()
+    }));
+
+    addToast(`Team "${newTeam.name}" created successfully`, "success");
+  };
+
   const handleEditProfilePicture = () => {
     setShowImgModal(true);
   };
@@ -379,7 +424,6 @@ const UserProfile = () => {
       const file = e.target.files[0];
       setProfilePicture(file);
 
-      // Create preview URL
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreviewUrl(reader.result);
@@ -406,13 +450,11 @@ const UserProfile = () => {
       });
 
       if (response.data && response.data.profilePictureUrl) {
-        // Update user in local storage with new profile picture URL
         const storedUser = JSON.parse(localStorage.getItem('user'));
         if (storedUser) {
           storedUser.profilePicture = response.data.profilePictureUrl;
           localStorage.setItem('user', JSON.stringify(storedUser));
 
-          // Update user state
           setUser({
             ...user,
             profilePicture: response.data.profilePictureUrl
@@ -423,17 +465,18 @@ const UserProfile = () => {
         }
 
         setShowImgModal(false);
+        addToast("Profile picture updated successfully", "success");
       }
     } catch (error) {
       console.error("Error uploading profile picture:", error);
       alert("Failed to upload profile picture. Please try again.");
+      addToast("Failed to upload profile picture", "error");
     }
   };
 
   const handleCancelProfilePicture = () => {
     setShowImgModal(false);
     setProfilePicture(null);
-    // Reset preview to current user profile picture if it exists
     setPreviewUrl(user?.profilePicture ? getProfilePictureUrl(user.profilePicture) : "");
   };
 
@@ -444,9 +487,9 @@ const UserProfile = () => {
       case 'user':
         return (
           <div className={`task-stats ${theme}`}>
-            <h3>Task Statistics</h3>
-            <p><strong>Total Completed Tasks:</strong> {taskStats.totalTasks}</p>
-            <p><strong>Average Completion Time:</strong> {taskStats.avgCompletionTime} hours</p>
+            <h3>{t("taskStatistics")}</h3>
+            <p><strong>{t("totalCompletedTasks")}:</strong> {taskStats.totalTasks}</p>
+            <p><strong>{t("averageCompletionTime")}:</strong> {taskStats.avgCompletionTime} {t("hours")}</p>
           </div>
         );
 
@@ -454,19 +497,19 @@ const UserProfile = () => {
         return (
           <div className={`profile-user-list ${theme}`}>
             <div className="admin-table-header">
-              <h3>All Users</h3>
+              <h3>{t("allUsers")}</h3>
               <button className="add-user-btn" onClick={handleAddUser}>
-                <i className="fas fa-plus"></i> Add User
+                <i className="fas fa-plus"></i> {t("addUser")}
               </button>
             </div>
             <div className="profile-users-table-container">
               <table className="profile-users-table">
                 <thead>
                   <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Actions</th>
+                    <th>{t("name")}</th>
+                    <th>{t("email")}</th>
+                    <th>{t("role")}</th>
+                    <th>{t("actions")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -483,14 +526,14 @@ const UserProfile = () => {
                         <button
                           className="profile-edit-btn"
                           onClick={() => handleEditUser(user)}
-                          title="Edit User"
+                          title={t("editUser")}
                         >
                           <i className="fas fa-edit"></i>
                         </button>
                         <button
                           className="profile-delete-btn"
                           onClick={() => handleDeleteUser(user._id)}
-                          title="Delete User"
+                          title={t("delete")}
                         >
                           <i className="fas fa-trash-alt"></i>
                         </button>
@@ -506,29 +549,34 @@ const UserProfile = () => {
       case 'manager':
         return (
           <div className={`profile-teams-list ${theme}`}>
-            <h3>My Teams</h3>
+            <div className="teams-header">
+              <h3>{t("myTeams")}</h3>
+              <button className="create-team-btn" onClick={() => setShowCreateTeamModal(true)}>
+                <i className="fas fa-plus"></i> {t("createTeam")}
+              </button>
+            </div>
             {managerTeams.length > 0 ? (
               <div className="profile-teams-table-container">
                 <table className="profile-teams-table">
                   <thead>
                     <tr>
-                      <th>Team Name</th>
-                      <th>Members</th>
-                      <th>Actions</th>
+                      <th>{t("teamName")}</th>
+                      <th>{t("members")}</th>
+                      <th>{t("actions")}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {managerTeams.map(team => (
                       <tr key={team._id} className="profile-team-row">
                         <td>{team.name}</td>
-                        <td><span className="member-count">{team.members.length} members</span></td>
+                        <td><span className="member-count">{team.members.length} {t("membersCount")}</span></td>
                         <td>
                           <button
                             className="manage-members-btn"
                             onClick={() => handleViewTeamMembers(team)}
-                            title="Manage Team Members"
+                            title={t("manageMembers")}
                           >
-                            <i className="fas fa-users"></i> Manage Members
+                            <i className="fas fa-users"></i> {t("manageMembers")}
                           </button>
                         </td>
                       </tr>
@@ -537,7 +585,7 @@ const UserProfile = () => {
                 </table>
               </div>
             ) : (
-              <p className="no-teams-message">You are not managing any teams yet.</p>
+              <p className="no-teams-message">{t("noTeamsMessage")}</p>
             )}
           </div>
         );
@@ -551,9 +599,10 @@ const UserProfile = () => {
     <div className={`home-container ${theme}`}>
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
       <div className={`main-content ${isSidebarOpen ? "sidebar-open" : "sidebar-closed"} ${theme}`}>
+        <ToastContainer toasts={toasts} removeToast={removeToast} />
         <Navbar handleLogout={handleLogout} isSidebarOpen={isSidebarOpen} />
         <Main />
-        <div className="loading">Loading user data...</div>
+        <div className="loading">{t("loadingUserData")}</div>
       </div>
     </div>
   );
@@ -562,6 +611,7 @@ const UserProfile = () => {
     <div className={`home-container ${theme}`}>
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
       <div className={`main-content ${isSidebarOpen ? "sidebar-open" : "sidebar-closed"} ${theme}`}>
+        <ToastContainer toasts={toasts} removeToast={removeToast} />
         <Navbar handleLogout={handleLogout} isSidebarOpen={isSidebarOpen} />
         <Main />
         <div className="error">{error}</div>
@@ -573,9 +623,10 @@ const UserProfile = () => {
     <div className={`home-container ${theme}`}>
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
       <div className={`main-content ${isSidebarOpen ? "sidebar-open" : "sidebar-closed"} ${theme}`}>
+        <ToastContainer toasts={toasts} removeToast={removeToast} />
         <Navbar handleLogout={handleLogout} isSidebarOpen={isSidebarOpen} />
         <Main />
-        <div className="error">No user data found</div>
+        <div className="error">{t("noUserDataFound")}</div>
       </div>
     </div>
   );
@@ -584,6 +635,7 @@ const UserProfile = () => {
     <div className={`home-container ${theme}`}>
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
       <div className={`main-content ${isSidebarOpen ? "sidebar-open" : "sidebar-closed"} ${theme}`}>
+        <ToastContainer toasts={toasts} removeToast={removeToast} />
         <Navbar handleLogout={handleLogout} isSidebarOpen={isSidebarOpen} />
         <Main />
         {user.role === 'admin' ? (
@@ -599,7 +651,7 @@ const UserProfile = () => {
                     e.target.src = profileImg;
                   }}
                 />
-                <div className="profile-img-edit" onClick={handleEditProfilePicture} title="Change profile picture">
+                <div className="profile-img-edit" onClick={handleEditProfilePicture} title={t("updateProfilePicture")}>
                   <FaEdit />
                 </div>
               </div>
@@ -610,30 +662,83 @@ const UserProfile = () => {
                     name="fullname"
                     value={formData.fullname}
                     onChange={handleChange}
-                    placeholder="fullname"
+                    placeholder={t("fullname")}
                   />
                   <input
                     type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    placeholder="Email"
+                    placeholder={t("email")}
                   />
                   <input
                     type="password"
                     name="password"
-                    placeholder="New Password (optional)"
+                    placeholder={t("newPassword")}
                     onChange={handleChange}
                   />
-                  <button className="profile-btn-edit" onClick={handleSave}>Save</button>
-                  <button className="profile-btn-cancel" onClick={() => setEditMode(false)}>Cancel</button>
+                  <button className="profile-btn-edit" onClick={handleSave}>{t("save")}</button>
+                  <button className="profile-btn-cancel" onClick={() => setEditMode(false)}>{t("cancel")}</button>
                 </>
               ) : (
                 <>
-                  <p><strong>Name:</strong> {user.fullname}</p>
-                  <p><strong>Email:</strong> {user.email}</p>
-                  <p><strong>Role:</strong> {user.role}</p>
-                  <button className="profile-btn-edit" onClick={handleEditClick}>Edit Profile</button>
+                  <p><strong>{t("name")}:</strong> {user.fullname}</p>
+                  <p><strong>{t("email")}:</strong> {user.email}</p>
+                  <p><strong>{t("role")}:</strong> {user.role}</p>
+                  <button className="profile-btn-edit" onClick={handleEditClick}>{t("editProfile")}</button>
+                </>
+              )}
+            </div>
+            {renderRoleSpecificContent()}
+          </div>
+        ) : user.role === 'manager' ? (
+          <div className="manager-profile-content">
+            <div className={`profile-info ${theme}`}>
+              <div className="profile-img-container">
+                <img
+                  src={getProfilePictureUrl(user.profilePicture)}
+                  alt="Profile"
+                  className="profile-img"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = profileImg;
+                  }}
+                />
+                <div className="profile-img-edit" onClick={handleEditProfilePicture} title={t("updateProfilePicture")}>
+                  <FaEdit />
+                </div>
+              </div>
+              {editMode ? (
+                <>
+                  <input
+                    type="text"
+                    name="fullname"
+                    value={formData.fullname}
+                    onChange={handleChange}
+                    placeholder={t("fullname")}
+                  />
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder={t("email")}
+                  />
+                  <input
+                    type="password"
+                    name="password"
+                    placeholder={t("newPassword")}
+                    onChange={handleChange}
+                  />
+                  <button className="profile-btn-edit" onClick={handleSave}>{t("save")}</button>
+                  <button className="profile-btn-cancel" onClick={() => setEditMode(false)}>{t("cancel")}</button>
+                </>
+              ) : (
+                <>
+                  <p><strong>{t("name")}:</strong> {user.fullname}</p>
+                  <p><strong>{t("email")}:</strong> {user.email}</p>
+                  <p><strong>{t("role")}:</strong> {user.role}</p>
+                  <button className="profile-btn-edit" onClick={handleEditClick}>{t("editProfile")}</button>
                 </>
               )}
             </div>
@@ -652,7 +757,7 @@ const UserProfile = () => {
                     e.target.src = profileImg;
                   }}
                 />
-                <div className="profile-img-edit" onClick={handleEditProfilePicture} title="Change profile picture">
+                <div className="profile-img-edit" onClick={handleEditProfilePicture} title={t("updateProfilePicture")}>
                   <FaEdit />
                 </div>
               </div>
@@ -663,30 +768,30 @@ const UserProfile = () => {
                     name="fullname"
                     value={formData.fullname}
                     onChange={handleChange}
-                    placeholder="fullname"
+                    placeholder={t("fullname")}
                   />
                   <input
                     type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    placeholder="Email"
+                    placeholder={t("email")}
                   />
                   <input
                     type="password"
                     name="password"
-                    placeholder="New Password (optional)"
+                    placeholder={t("newPassword")}
                     onChange={handleChange}
                   />
-                  <button className="profile-btn-edit" onClick={handleSave}>Save</button>
-                  <button className="profile-btn-cancel" onClick={() => setEditMode(false)}>Cancel</button>
+                  <button className="profile-btn-edit" onClick={handleSave}>{t("save")}</button>
+                  <button className="profile-btn-cancel" onClick={() => setEditMode(false)}>{t("cancel")}</button>
                 </>
               ) : (
                 <>
-                  <p><strong>Name:</strong> {user.fullname}</p>
-                  <p><strong>Email:</strong> {user.email}</p>
-                  <p><strong>Role:</strong> {user.role}</p>
-                  <button className="profile-btn-edit" onClick={handleEditClick}>Edit Profile</button>
+                  <p><strong>{t("name")}:</strong> {user.fullname}</p>
+                  <p><strong>{t("email")}:</strong> {user.email}</p>
+                  <p><strong>{t("role")}:</strong> {user.role}</p>
+                  <button className="profile-btn-edit" onClick={handleEditClick}>{t("editProfile")}</button>
                 </>
               )}
             </div>
@@ -699,7 +804,7 @@ const UserProfile = () => {
       {showImgModal && (
         <div className="profile-img-modal">
           <div className="profile-img-modal-content">
-            <h3>Update Profile Picture</h3>
+            <h3>{t("updateProfilePicture")}</h3>
 
             <img
               src={previewUrl || profileImg}
@@ -723,7 +828,7 @@ const UserProfile = () => {
               className="profile-img-upload-btn"
               onClick={triggerFileInput}
             >
-              Choose Image
+              {t("chooseImage")}
             </button>
 
             <div className="profile-img-modal-actions">
@@ -732,13 +837,13 @@ const UserProfile = () => {
                 onClick={handleSaveProfilePicture}
                 disabled={!profilePicture}
               >
-                Save
+                {t("save")}
               </button>
               <button
                 className="profile-img-cancel-btn"
                 onClick={handleCancelProfilePicture}
               >
-                Cancel
+                {t("cancel")}
               </button>
             </div>
           </div>
@@ -757,6 +862,22 @@ const UserProfile = () => {
         onClose={() => setShowTeamMembersModal(false)}
         team={selectedTeam}
         onTeamUpdated={handleTeamUpdated}
+      />
+
+      <TeamCreateModal
+        isOpen={showCreateTeamModal}
+        onClose={() => setShowCreateTeamModal(false)}
+        onTeamCreated={handleTeamCreated}
+      />
+
+      <DeleteConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setUserToDelete(null);
+        }}
+        onConfirm={confirmDeleteUser}
+        userName={allUsers.find(user => user._id === userToDelete)?.fullname || ''}
       />
     </div>
   );

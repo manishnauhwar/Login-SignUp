@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_DEV_URL,
+  baseURL: import.meta.env.VITE_PRO_URL,
   withCredentials: true,
 });
 
@@ -10,9 +10,6 @@ axiosInstance.interceptors.request.use(
     const token = localStorage.getItem("accessToken") || localStorage.getItem("token");
     if (token) {
       config.headers["Authorization"] = `Bearer ${token}`;
-      console.log(`Request to ${config.url} with token: ${token.substring(0, 15)}...`);
-    } else {
-      console.log(`Request to ${config.url} WITHOUT token`);
     }
     return config;
   },
@@ -24,7 +21,6 @@ axiosInstance.interceptors.request.use(
 
 axiosInstance.interceptors.response.use(
   (response) => {
-    console.log(`Response from ${response.config.url}:`, response.status);
     return response;
   },
   (error) => {

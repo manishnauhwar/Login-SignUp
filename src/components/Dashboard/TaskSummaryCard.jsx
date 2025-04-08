@@ -3,11 +3,13 @@ import React, { useContext } from "react";
 // import { Chart, ArcElement, Tooltip } from "chart.js";
 import "./TaskSummaryCard.css";
 import { ThemeContext } from "../../utils/ThemeContext";
+import { LanguageContext } from "../../utils/LanguageContext";
 
 // Chart.register(ArcElement, Tooltip);
 
 const TaskSummaryCard = ({ totalTasks, overdueTasks, completedTasks, tasksForToday, TaskTodo, TaskInProgress }) => {
   const { theme } = useContext(ThemeContext);
+  const { translate } = useContext(LanguageContext);
   const pendingTasks = TaskTodo + TaskInProgress;
   // const data = {
   //   datasets: [
@@ -26,24 +28,24 @@ const TaskSummaryCard = ({ totalTasks, overdueTasks, completedTasks, tasksForTod
   return (
     <div className="task-summary-card" data-theme={theme}>
       <div className="task-summary-item">
-        <h3>Total Tasks</h3>
+        <h3>{translate("totalTasks")}</h3>
         <p>{totalTasks}</p>
       </div>
       <div className="task-summary-item overdue">
-        <h3>Overdue Tasks</h3>
+        <h3>{translate("overdueTasks")}</h3>
         <p>{overdueTasks}</p>
       </div>
       <div className="task-summary-item completed">
-        <h3>Completed Tasks</h3>
+        <h3>{translate("completedTasks")}</h3>
         <p>{completedTasks}</p>
       </div>
       <div className="task-summary-item pending">
-        <h3>Pending Tasks</h3>
+        <h3>{translate("pendingTasks")}</h3>
         <p>{pendingTasks}</p>
       </div>
       <div className="task-summary-item task-today-chart">
         <div className="task-today">
-          <h3>Tasks for Today</h3>
+          <h3>{translate("tasksForToday")}</h3>
           <p>{tasksForToday}</p>
         </div>
         {/* <div className="doughnut-chart">

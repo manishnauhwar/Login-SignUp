@@ -451,15 +451,81 @@ input:focus {
 
 .profile-teams-list {
   background: linear-gradient(135deg, #ffffff 0%, #f8f8f8 100%);
-  border-radius: 10px;
-  padding: 20px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  flex-grow: 1;
   transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
 }
 
+.manager-profile-content .profile-teams-list {
+  flex: 1;
+  min-width: 500px;
+}
+
 .profile-teams-list:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.teams-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.manager-profile-content .teams-header {
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+[data-theme="dark"] .manager-profile-content .teams-header {
+  border-bottom-color: #4a4a4a;
+}
+
+.teams-header h3 {
+  font-size: 22px;
+  color: #222;
+  font-weight: bold;
+  margin: 0;
+}
+
+.create-team-btn {
+  background: linear-gradient(135deg, #28a745, #218838);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  font-size: 14px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.create-team-btn:hover {
+  background: linear-gradient(135deg, #218838, #1e7e34);
   transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.create-team-btn i {
+  font-size: 12px;
+}
+
+[data-theme="dark"] .create-team-btn {
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+}
+
+[data-theme="dark"] .create-team-btn:hover {
+  background: linear-gradient(135deg, #27ae60, #219653);
+}
+
+[data-theme="dark"] .teams-header h3 {
+  color: #ecf0f1;
 }
 
 .no-teams-message {
@@ -650,6 +716,14 @@ input:focus {
   margin-top: 20px;
 }
 
+.manager-profile-content {
+  display: flex;
+  width: 100%;
+  gap: 20px;
+  align-items: flex-start;
+  margin-top: 20px;
+}
+
 .admin-table-header {
   display: flex;
   justify-content: space-between;
@@ -682,21 +756,26 @@ input:focus {
 }
 
 @media (max-width: 1100px) {
-  .admin-profile-content {
+
+  .admin-profile-content,
+  .manager-profile-content {
     flex-direction: column;
   }
 
-  .admin-profile-content .profile-info {
+  .admin-profile-content .profile-info,
+  .manager-profile-content .profile-info {
     width: 100%;
     margin-bottom: 20px;
   }
 
-  .profile-user-list {
+  .profile-user-list,
+  .manager-profile-content .profile-teams-list {
     min-width: unset;
     width: 100%;
   }
 }
 
-.admin-profile-content .profile-info {
+.admin-profile-content .profile-info,
+.manager-profile-content .profile-info {
   width: 300px;
 }

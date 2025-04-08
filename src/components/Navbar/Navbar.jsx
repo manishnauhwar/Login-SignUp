@@ -6,11 +6,13 @@ import { BsSun, BsMoon } from "react-icons/bs";
 import { useNotifications } from "../../utils/NotificationContext";
 import { useNavigate } from "react-router-dom";
 import { ThemeContext } from "../../utils/ThemeContext";
+import { LanguageContext } from "../../utils/LanguageContext";
 
 const Navbar = ({ handleLogout, isSidebarOpen, searchQuery, setSearchQuery }) => {
   const navigate = useNavigate();
   const { notifications, markAsRead, deleteNotification } = useNotifications();
   const { theme, toggleTheme } = useContext(ThemeContext);
+  const { translate } = useContext(LanguageContext);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -35,7 +37,6 @@ const Navbar = ({ handleLogout, isSidebarOpen, searchQuery, setSearchQuery }) =>
     setIsDropdownOpen(prev => !prev);
   };
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -110,10 +111,10 @@ const Navbar = ({ handleLogout, isSidebarOpen, searchQuery, setSearchQuery }) =>
           )}
         </div>
         <button className="nav-btn profile-btn" title="View Profile" onClick={handleProfile}>
-          <span>Profile</span> <CgProfile className="profile-icon" />
+          <span>{translate("profile")}</span> <CgProfile className="profile-icon" />
         </button>
         <button onClick={handleLogout} className="nav-btn logout" title="Logout">
-          <IoLogOutOutline /> <span>Logout</span>
+          <IoLogOutOutline /> <span>{translate("logout")}</span>
         </button>
       </div>
     </div>

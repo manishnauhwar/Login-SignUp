@@ -12,17 +12,34 @@ import { useNotifications } from "../../utils/NotificationContext";
 import { ThemeContext } from "../../utils/ThemeContext";
 import "./Manager.css";
 import axiosInstance from "../../utils/axiosInstance";
+import ToastContainer from "../Toast/ToastContainer";
+import { useTranslation } from "react-i18next";
 
 const Manager = () => {
   const navigate = useNavigate();
   const { createNotification } = useNotifications();
   const { theme } = useContext(ThemeContext);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [manager, setManager] = useState(null);
   const [teamMembers, setTeamMembers] = useState([]);
   const [managerTasks, setManagerTasks] = useState([]);
   const [teamId, setTeamId] = useState(null);
   const [lastRefresh, setLastRefresh] = useState(Date.now());
+  const [toasts, setToasts] = useState([]);
+  const { t } = useTranslation();
+
+  const addToast = (message, type = "info") => {
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, message, type }]);
+
+    setTimeout(() => {
+      removeToast(id);
+    }, 3000);
+  };
+
+  const removeToast = (id) => {
+    setToasts(prev => prev.filter(toast => toast.id !== id));
+  };
 
   const refreshTeamData = () => {
     setLastRefresh(Date.now());
@@ -35,6 +52,8 @@ const Manager = () => {
         recipient: managerId,
         sender: managerId
       });
+
+      addToast("Refreshing team data...", "info");
     }
   };
 
@@ -143,7 +162,6 @@ const Manager = () => {
 
             if (allMembers.length > 0) {
               setTeamMembers(allMembers);
-              console.log("Found", allMembers.length, "team members from", userTeams.length, "teams");
             }
             else if (memberIdsSet.size > 0) {
               try {
@@ -160,7 +178,6 @@ const Manager = () => {
                   .filter(member => member !== null);
 
                 setTeamMembers(memberObjects);
-                console.log("Fetched", memberObjects.length, "team members from IDs");
               } catch (userError) {
                 console.error("Error fetching users:", userError);
                 setTeamMembers([]);
@@ -171,9 +188,7 @@ const Manager = () => {
 
             setTeamId(userTeams[0]._id);
 
-            console.log("Manager is assigned to", userTeams.length, "teams");
           } else {
-            console.log("No team found for manager:", managerId);
             setManager(storedUser);
             setTeamMembers([]);
             setTeamId(null);
@@ -234,6 +249,7 @@ const Manager = () => {
 
       const assignedMember = teamMembers.find((member) => member._id === memberId);
       if (!assignedMember) {
+        addToast("Team member not found", "error");
         return;
       }
       await axiosInstance.patch(`/tasks/${taskId}`, {
@@ -254,6 +270,8 @@ const Manager = () => {
         recipient: memberId,
         sender: manager._id || manager.id
       });
+
+      addToast(`Task "${taskData.title}" assigned to ${assignedMember.fullname}`, "success");
 
       try {
         const adminId = taskData.userId;
@@ -281,6 +299,8 @@ const Manager = () => {
         recipient: manager._id || manager.id,
         sender: manager._id || manager.id
       });
+
+      addToast("Failed to assign task to team member", "error");
     }
   };
 
@@ -289,11 +309,12 @@ const Manager = () => {
       <div className="home-container" data-theme={theme}>
         <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
         <div className={`main-content ${isSidebarOpen ? "sidebar-open" : "sidebar-closed"}`} data-theme={theme}>
+          <ToastContainer toasts={toasts} removeToast={removeToast} />
           <Navbar handleLogout={handleLogout} isSidebarOpen={isSidebarOpen} />
           <Main />
           <div className="sections-container">
             <div className="wrapped-section">
-              <h2>Tasks To Be Assigned</h2>
+              <h2>{t('tasksToBeAssigned')}</h2>
               {managerTasks.length > 0 ? (
                 <div className="task-container">
                   {managerTasks.map((task) => (
@@ -301,23 +322,23 @@ const Manager = () => {
                   ))}
                 </div>
               ) : (
-                <p>No tasks assigned to you yet.</p>
+                <p>{t('noTasksToAssign')}</p>
               )}
             </div>
             <div className="wrapped-section">
               <div className="team-section-header">
-                <h2>My Team Members</h2>
+                <h2>{t('myTeamMembers')}</h2>
                 <button
                   className="refresh-team-btn"
                   onClick={refreshTeamData}
-                  title="Refresh Team Data"
+                  title={t('refreshTeamData')}
                 >
-                  <i className="fas fa-sync-alt"></i> Refresh
+                  <i className="fas fa-sync-alt"></i> {t('refresh')}
                 </button>
               </div>
               <p className="team-members-note">
-                Showing team members from all teams you manage.
-                <span className="member-count-badge">{teamMembers.length} members</span>
+                {t('showingTeamMembers')}
+                <span className="member-count-badge">{teamMembers.length} {t('members')}</span>
               </p>
               {teamMembers.length > 0 ? (
                 <div className="team-container">
@@ -326,7 +347,7 @@ const Manager = () => {
                   ))}
                 </div>
               ) : (
-                <p>No team members found.</p>
+                <p>{t('noTeamMembersFound')}</p>
               )}
             </div>
           </div>

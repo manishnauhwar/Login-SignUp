@@ -9,19 +9,22 @@
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  padding: 20px;
 }
 
 .calendar-modal {
   background-color: var(--bg-color);
   border-radius: 8px;
-  
   padding: 20px;
-  width: 90%;
+  width: 100%;
   max-width: 400px;
   max-height: 80vh;
   position: relative;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-left: auto;
+  margin-right: auto;
 }
+
 .close-button {
   margin-left: auto;
   position: absolute;
@@ -226,8 +229,13 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
+  .calendar-overlay {
+    padding: 10px;
+  }
+
   .calendar-modal {
-    width: 95%;
+    width: 100%;
+    max-width: 350px;
     padding: 15px;
   }
 
@@ -237,5 +245,32 @@
 
   .calendar-day {
     font-size: 0.9em;
+  }
+
+  .calendar-header h3 {
+    font-size: 1.2rem;
+  }
+
+  .filtered-tasks {
+    max-height: 150px;
+  }
+}
+
+@media (max-width: 480px) {
+  .calendar-modal {
+    max-width: 300px;
+    padding: 10px;
+  }
+
+  .calendar-day {
+    font-size: 0.8em;
+  }
+
+  .calendar-header h3 {
+    font-size: 1rem;
+  }
+
+  .filtered-tasks {
+    max-height: 120px;
   }
 }

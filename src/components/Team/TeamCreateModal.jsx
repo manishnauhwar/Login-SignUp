@@ -3,9 +3,11 @@ import Modal from "react-modal";
 import { ThemeContext } from "../../utils/ThemeContext";
 import axiosInstance from "../../utils/axiosInstance";
 import "./TeamCreateModal.css";
+import { useTranslation } from "react-i18next";
 
 const TeamCreateModal = ({ isOpen, onClose, onTeamCreated }) => {
   const { theme } = useContext(ThemeContext);
+  const { t } = useTranslation();
   const [teamName, setTeamName] = useState("");
   const [selectedManager, setSelectedManager] = useState("");
   const [selectedMembers, setSelectedMembers] = useState([]);
@@ -27,7 +29,7 @@ const TeamCreateModal = ({ isOpen, onClose, onTeamCreated }) => {
         setUsers(regularUsers);
       } catch (error) {
         console.error("Error fetching users:", error);
-        setError("Failed to load users. Please try again.");
+        setError(t("failedToLoadUsers"));
       }
     };
 
@@ -38,7 +40,7 @@ const TeamCreateModal = ({ isOpen, onClose, onTeamCreated }) => {
       setSelectedMembers([]);
       setError("");
     }
-  }, [isOpen]);
+  }, [isOpen, t]);
 
   const handleMemberSelection = (userId) => {
     setSelectedMembers(prev => {
@@ -60,15 +62,15 @@ const TeamCreateModal = ({ isOpen, onClose, onTeamCreated }) => {
 
   const validateForm = () => {
     if (!teamName.trim()) {
-      setError("Team name is required");
+      setError(t("teamNameIsRequired"));
       return false;
     }
     if (!selectedManager) {
-      setError("Please select a manager");
+      setError(t("pleaseSelectManager"));
       return false;
     }
     if (selectedMembers.length === 0) {
-      setError("Please select at least one team member");
+      setError(t("pleaseSelectMember"));
       return false;
     }
     setError("");
@@ -117,7 +119,7 @@ const TeamCreateModal = ({ isOpen, onClose, onTeamCreated }) => {
       }
     } catch (error) {
       console.error("Error creating team:", error);
-      setError(error.response?.data?.message || "Failed to create team. Please try again.");
+      setError(error.response?.data?.message || t("failedToCreateTeam"));
     } finally {
       setIsSubmitting(false);
     }
@@ -127,14 +129,14 @@ const TeamCreateModal = ({ isOpen, onClose, onTeamCreated }) => {
     <Modal
       isOpen={isOpen}
       onRequestClose={onClose}
-      contentLabel="Create Team"
+      contentLabel={t("createTeam")}
       className="team-modal-content"
       overlayClassName="team-modal-overlay"
       ariaHideApp={false}
       data-theme={theme}
     >
       <div className="team-modal-header">
-        <h2>Create New Team</h2>
+        <h2>{t("createNewTeam")}</h2>
         <button className="team-modal-close" onClick={onClose}>×</button>
       </div>
 
@@ -142,24 +144,24 @@ const TeamCreateModal = ({ isOpen, onClose, onTeamCreated }) => {
         {error && <div className="team-modal-error">{error}</div>}
 
         <div className="team-modal-field">
-          <label htmlFor="teamName">Team Name</label>
+          <label htmlFor="teamName">{t("teamName")}</label>
           <input
             id="teamName"
             type="text"
             value={teamName}
             onChange={(e) => setTeamName(e.target.value)}
-            placeholder="Enter team name"
+            placeholder={t("enterTeamName")}
           />
         </div>
 
         <div className="team-modal-field">
-          <label htmlFor="manager">Select Manager</label>
+          <label htmlFor="manager">{t("selectManager")}</label>
           <select
             id="manager"
             value={selectedManager}
             onChange={(e) => setSelectedManager(e.target.value)}
           >
-            <option value="">Select a manager</option>
+            <option value="">{t("selectAManager")}</option>
             {managers.map(manager => (
               <option key={manager._id} value={manager._id}>
                 {manager.fullname}
@@ -170,13 +172,13 @@ const TeamCreateModal = ({ isOpen, onClose, onTeamCreated }) => {
 
         <div className="team-modal-field">
           <div className="team-members-header">
-            <label>Select Team Members ({selectedMembers.length}/{users.length})</label>
+            <label>{t("selectTeamMembers")} ({selectedMembers.length}/{users.length})</label>
             <button
               type="button"
               className="select-all-btn"
               onClick={handleSelectAllMembers}
             >
-              {selectedMembers.length === users.length ? "Deselect All" : "Select All"}
+              {selectedMembers.length === users.length ? t("deselectAll") : t("selectAll")}
             </button>
           </div>
           <div className="team-members-list">
@@ -194,7 +196,7 @@ const TeamCreateModal = ({ isOpen, onClose, onTeamCreated }) => {
                 </div>
               ))
             ) : (
-              <p>No users available</p>
+              <p>{t("noUsersAvailable")}</p>
             )}
           </div>
 
@@ -207,14 +209,14 @@ const TeamCreateModal = ({ isOpen, onClose, onTeamCreated }) => {
             className="team-modal-cancel"
             disabled={isSubmitting}
           >
-            Cancel
+            {t("cancel")}
           </button>
           <button
             type="submit"
             className="team-modal-submit"
             disabled={isSubmitting}
           >
-            {isSubmitting ? "Creating..." : "Create Team"}
+            {isSubmitting ? t("creating") : t("createTeam")}
           </button>
         </div>
       </form>

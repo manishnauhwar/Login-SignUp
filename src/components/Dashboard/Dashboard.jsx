@@ -8,6 +8,7 @@ import TaskStatusChart from "../../charts/TaskStatusChart";
 import TaskSummaryCard from "./TaskSummaryCard";
 import TaskStatsOverYear from "../../charts/TaskStatsOverYear";
 import { ThemeContext } from "../../utils/ThemeContext";
+import { LanguageContext } from "../../utils/LanguageContext";
 import "./Dashboard.css";
 import Main from "../Title/Main";
 import Navbar from "../Navbar/Navbar";
@@ -15,11 +16,12 @@ import axiosInstance from "../../utils/axiosInstance";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const { theme } = useContext(ThemeContext);
+  const { translate, translateTaskContent } = useContext(LanguageContext);
   const [user, setUser] = useState(null);
   const [taskStats, setTaskStats] = useState([]);
   const [teamMembers, setTeamMembers] = useState([]);
@@ -83,7 +85,7 @@ const Dashboard = () => {
         }));
 
         let filteredTasks = transformedTasks;
-        const userId = user._id || user.id; 
+        const userId = user._id || user.id;
 
         if (user?.role === "user") {
           filteredTasks = transformedTasks.filter(task =>
@@ -121,6 +123,9 @@ const Dashboard = () => {
     fetchStats();
   }, [tasks]);
 
+  // Translated tasks for charts
+  const translatedTasks = tasks.map(task => translateTaskContent(task));
+
   const calculateTaskSummary = () => {
     const totalTasks = tasks.length;
     const completedTasks = tasks.filter((task) => task.status && task.status.toLowerCase() === "completed").length;
@@ -154,15 +159,15 @@ const Dashboard = () => {
           {loading ? (
             <div className="loading-container">
               <div className="loading-spinner"></div>
-              <p>Loading tasks...</p>
+              <p>{translate("loadingTasks")}</p>
             </div>
           ) : (
             <>
               <div className="dashboard-content">
                 <TaskSummaryCard totalTasks={totalTasks} completedTasks={completedTasks} overdueTasks={overdueTasks} tasksForToday={tasksForToday} TaskTodo={TaskTodo} TaskInProgress={TaskInProgress} />
                 <div className="previousyear">
-                  {tasks.length > 0 && <TaskStatusChart tasks={tasks} />}
-                  {tasks.length > 0 && <TaskPriorityChart tasks={tasks} />}
+                  {tasks.length > 0 && <TaskStatusChart tasks={translatedTasks} />}
+                  {tasks.length > 0 && <TaskPriorityChart tasks={translatedTasks} />}
                   {taskStats.length > 0 && <TaskStatsOverYear taskStats={taskStats} />}
                 </div>
               </div>

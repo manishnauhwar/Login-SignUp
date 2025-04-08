@@ -3,9 +3,11 @@ import Modal from "react-modal";
 import { ThemeContext } from "../../utils/ThemeContext";
 import axiosInstance from "../../utils/axiosInstance";
 import "./UserModal.css";
+import { useTranslation } from "react-i18next";
 
 const UserModal = ({ isOpen, onClose, onUserSaved, user }) => {
   const { theme } = useContext(ThemeContext);
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     fullname: "",
     email: "",
@@ -45,19 +47,19 @@ const UserModal = ({ isOpen, onClose, onUserSaved, user }) => {
 
   const validateForm = () => {
     if (!formData.fullname.trim()) {
-      setError("Name is required");
+      setError(t("nameIsRequired"));
       return false;
     }
     if (!formData.email.trim()) {
-      setError("Email is required");
+      setError(t("emailIsRequired"));
       return false;
     }
     if (!isEditMode && !formData.password.trim()) {
-      setError("Password is required for new users");
+      setError(t("passwordIsRequired"));
       return false;
     }
     if (!isEditMode && formData.password.length < 6) {
-      setError("Password must be at least 6 characters");
+      setError(t("passwordMinLength"));
       return false;
     }
     return true;
@@ -89,10 +91,8 @@ const UserModal = ({ isOpen, onClose, onUserSaved, user }) => {
         const isAdminCreatingUser = token && user;
 
         if (isAdminCreatingUser) {
-          console.log('Admin creating user with token:', token.substring(0, 15) + '...');
           response = await axiosInstance.post('/users/admin/create-user', formData);
         } else {
-          console.log('Regular signup without admin privileges');
           response = await axiosInstance.post('/users/signup', {
             fullname: formData.fullname,
             email: formData.email,
@@ -109,7 +109,7 @@ const UserModal = ({ isOpen, onClose, onUserSaved, user }) => {
       }
     } catch (error) {
       console.error("Error saving user:", error);
-      setError(error.response?.data?.message || "Failed to save user. Please try again.");
+      setError(error.response?.data?.message || t("failedToSaveUser"));
     } finally {
       setIsSubmitting(false);
     }
@@ -119,14 +119,14 @@ const UserModal = ({ isOpen, onClose, onUserSaved, user }) => {
     <Modal
       isOpen={isOpen}
       onRequestClose={onClose}
-      contentLabel={isEditMode ? "Edit User" : "Add User"}
+      contentLabel={isEditMode ? t("editUser") : t("addNewUser")}
       className="user-modal-content"
       overlayClassName="user-modal-overlay"
       ariaHideApp={false}
       data-theme={theme}
     >
       <div className="user-modal-header">
-        <h2>{isEditMode ? "Edit User" : "Add New User"}</h2>
+        <h2>{isEditMode ? t("editUser") : t("addNewUser")}</h2>
         <button className="user-modal-close" onClick={onClose}>×</button>
       </div>
 
@@ -134,51 +134,51 @@ const UserModal = ({ isOpen, onClose, onUserSaved, user }) => {
         {error && <div className="user-modal-error">{error}</div>}
 
         <div className="user-modal-field">
-          <label htmlFor="fullname">Full Name</label>
+          <label htmlFor="fullname">{t("fullName")}</label>
           <input
             id="fullname"
             name="fullname"
             type="text"
             value={formData.fullname}
             onChange={handleChange}
-            placeholder="Enter full name"
+            placeholder={t("enterFullName")}
           />
         </div>
 
         <div className="user-modal-field">
-          <label htmlFor="email">Email</label>
+          <label htmlFor="email">{t("email")}</label>
           <input
             id="email"
             name="email"
             type="email"
             value={formData.email}
             onChange={handleChange}
-            placeholder="Enter email address"
+            placeholder={t("enterEmail")}
           />
         </div>
 
         <div className="user-modal-field">
-          <label htmlFor="password">{isEditMode ? "New Password (leave blank to keep current)" : "Password"}</label>
+          <label htmlFor="password">{isEditMode ? t("newPasswordOptional") : t("password")}</label>
           <input
             id="password"
             name="password"
             type="password"
             value={formData.password}
             onChange={handleChange}
-            placeholder={isEditMode ? "Enter new password (optional)" : "Enter password"}
+            placeholder={isEditMode ? t("enterNewPassword") : t("enterPassword")}
           />
         </div>
 
         <div className="user-modal-field">
-          <label htmlFor="role">Role</label>
+          <label htmlFor="role">{t("role")}</label>
           <select
             id="role"
             name="role"
             value={formData.role}
             onChange={handleChange}
           >
-            <option value="user">User</option>
-            <option value="manager">Manager</option>
+            <option value="user">{t("user")}</option>
+            <option value="manager">{t("manager")}</option>
           </select>
         </div>
 
@@ -189,7 +189,7 @@ const UserModal = ({ isOpen, onClose, onUserSaved, user }) => {
             className="user-modal-cancel"
             disabled={isSubmitting}
           >
-            Cancel
+            {t("cancel")}
           </button>
           <button
             type="submit"
@@ -197,8 +197,8 @@ const UserModal = ({ isOpen, onClose, onUserSaved, user }) => {
             disabled={isSubmitting}
           >
             {isSubmitting
-              ? (isEditMode ? "Updating..." : "Creating...")
-              : (isEditMode ? "Update User" : "Create User")}
+              ? (isEditMode ? t("updating") : t("creating"))
+              : (isEditMode ? t("updateUser") : t("createUser"))}
           </button>
         </div>
       </form>

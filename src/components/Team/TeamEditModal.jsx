@@ -3,9 +3,11 @@ import Modal from "react-modal";
 import { ThemeContext } from "../../utils/ThemeContext";
 import axiosInstance from "../../utils/axiosInstance";
 import "./TeamCreateModal.css";
+import { useTranslation } from "react-i18next";
 
 const TeamEditModal = ({ isOpen, onClose, onTeamUpdated, team }) => {
   const { theme } = useContext(ThemeContext);
+  const { t } = useTranslation();
   const [teamName, setTeamName] = useState("");
   const [selectedManager, setSelectedManager] = useState("");
   const [selectedMembers, setSelectedMembers] = useState([]);
@@ -27,7 +29,7 @@ const TeamEditModal = ({ isOpen, onClose, onTeamUpdated, team }) => {
         setUsers(regularUsers);
       } catch (error) {
         console.error("Error fetching users:", error);
-        setError("Failed to load users. Please try again.");
+        setError(t("failedToLoadUsers"));
       }
     };
 
@@ -44,7 +46,7 @@ const TeamEditModal = ({ isOpen, onClose, onTeamUpdated, team }) => {
 
       setError("");
     }
-  }, [isOpen, team]);
+  }, [isOpen, team, t]);
 
   const handleMemberSelection = (userId) => {
     setSelectedMembers(prev => {
@@ -66,15 +68,15 @@ const TeamEditModal = ({ isOpen, onClose, onTeamUpdated, team }) => {
 
   const validateForm = () => {
     if (!teamName.trim()) {
-      setError("Team name is required");
+      setError(t("teamNameIsRequired"));
       return false;
     }
     if (!selectedManager) {
-      setError("Please select a manager");
+      setError(t("pleaseSelectManager"));
       return false;
     }
     if (selectedMembers.length === 0) {
-      setError("Please select at least one team member");
+      setError(t("pleaseSelectMember"));
       return false;
     }
     setError("");
@@ -141,7 +143,7 @@ const TeamEditModal = ({ isOpen, onClose, onTeamUpdated, team }) => {
       }
     } catch (error) {
       console.error("Error updating team:", error);
-      setError(error.response?.data?.message || "Failed to update team. Please try again.");
+      setError(error.response?.data?.message || t("failedToCreateTeam"));
     } finally {
       setIsSubmitting(false);
     }
@@ -153,14 +155,14 @@ const TeamEditModal = ({ isOpen, onClose, onTeamUpdated, team }) => {
     <Modal
       isOpen={isOpen}
       onRequestClose={onClose}
-      contentLabel="Edit Team"
+      contentLabel={t("editTeam")}
       className="team-modal-content"
       overlayClassName="team-modal-overlay"
       ariaHideApp={false}
       data-theme={theme}
     >
       <div className="team-modal-header">
-        <h2>Edit Team</h2>
+        <h2>{t("editTeam")}</h2>
         <button className="team-modal-close" onClick={onClose}>×</button>
       </div>
 
@@ -168,24 +170,24 @@ const TeamEditModal = ({ isOpen, onClose, onTeamUpdated, team }) => {
         {error && <div className="team-modal-error">{error}</div>}
 
         <div className="team-modal-field">
-          <label htmlFor="teamName">Team Name</label>
+          <label htmlFor="teamName">{t("teamName")}</label>
           <input
             id="teamName"
             type="text"
             value={teamName}
             onChange={(e) => setTeamName(e.target.value)}
-            placeholder="Enter team name"
+            placeholder={t("enterTeamName")}
           />
         </div>
 
         <div className="team-modal-field">
-          <label htmlFor="manager">Select Manager</label>
+          <label htmlFor="manager">{t("selectManager")}</label>
           <select
             id="manager"
             value={selectedManager}
             onChange={(e) => setSelectedManager(e.target.value)}
           >
-            <option value="">Select a manager</option>
+            <option value="">{t("selectAManager")}</option>
             {managers.map(manager => (
               <option key={manager._id} value={manager._id}>
                 {manager.fullname}
@@ -196,31 +198,31 @@ const TeamEditModal = ({ isOpen, onClose, onTeamUpdated, team }) => {
 
         <div className="team-modal-field">
           <div className="team-members-header">
-            <label>Select Team Members ({selectedMembers.length}/{users.length})</label>
+            <label>{t("selectTeamMembers")} ({selectedMembers.length}/{users.length})</label>
             <button
               type="button"
               className="select-all-btn"
               onClick={handleSelectAllMembers}
             >
-              {selectedMembers.length === users.length ? "Deselect All" : "Select All"}
+              {selectedMembers.length === users.length ? t("deselectAll") : t("selectAll")}
             </button>
           </div>
           <div className="team-members-list">
             {users.length > 0 ? (
               users.map(user => (
                 <div key={user._id} className="team-member-item">
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={selectedMembers.includes(user._id)}
-                      onChange={() => handleMemberSelection(user._id)}
-                    />
-                    <span>{user.fullname}</span>
-                  </label>
+                  <input
+                    type="checkbox"
+                    id={`member-${user._id}`}
+                    className="team-member-checkbox"
+                    checked={selectedMembers.includes(user._id)}
+                    onChange={() => handleMemberSelection(user._id)}
+                  />
+                  <label htmlFor={`member-${user._id}`}>{user.fullname}</label>
                 </div>
               ))
             ) : (
-              <p>No users available</p>
+              <p>{t("noUsersAvailable")}</p>
             )}
           </div>
         </div>
@@ -232,14 +234,14 @@ const TeamEditModal = ({ isOpen, onClose, onTeamUpdated, team }) => {
             className="team-modal-cancel"
             disabled={isSubmitting}
           >
-            Cancel
+            {t("cancel")}
           </button>
           <button
             type="submit"
             className="team-modal-submit"
             disabled={isSubmitting}
           >
-            {isSubmitting ? "Updating..." : "Update Team"}
+            {isSubmitting ? t("updating") : t("updateTeam")}
           </button>
         </div>
       </form>

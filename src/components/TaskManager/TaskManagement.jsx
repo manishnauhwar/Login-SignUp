@@ -8,12 +8,14 @@ import DueDateTableWithModal from '../Dashboard/DueDateModel';
 import { logout } from '../../utils/auth';
 import SortTasks from '../TaskManager/SortTasks';
 import { ThemeContext } from "../../utils/ThemeContext";
+import { LanguageContext } from "../../utils/LanguageContext";
 import axiosInstance from '../../utils/axiosInstance';
 
 const TaskManagement = () => {
   const navigate = useNavigate();
   const { theme } = useContext(ThemeContext);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const { translate, translateTaskContent } = useContext(LanguageContext);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [tasks, setTasks] = useState([]);
   const [originaltasks, setOriginaltasks] = useState([]);
   const [allTasks, setAllTasks] = useState([]);
@@ -21,6 +23,7 @@ const TaskManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [user, setUser] = useState(null);
   const [teamMembers, setTeamMembers] = useState([]);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem('user'));
@@ -69,7 +72,7 @@ const TaskManagement = () => {
         }));
 
         let filteredTasks = transformedTasks;
-        const userId = user._id || user.id; 
+        const userId = user._id || user.id;
 
         if (user?.role === "user") {
           filteredTasks = transformedTasks.filter(task =>
@@ -130,7 +133,7 @@ const TaskManagement = () => {
           </div>
           <div className="data-table">
             {loading ? (
-              <p>Loading...</p>
+              <p>{translate("loadingTasks")}</p>
             ) : (
               <DueDateTableWithModal
                 tasks={tasks}

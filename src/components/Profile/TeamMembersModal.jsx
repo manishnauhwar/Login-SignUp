@@ -3,11 +3,13 @@ import Modal from "react-modal";
 import { ThemeContext } from "../../utils/ThemeContext";
 import axiosInstance from "../../utils/axiosInstance";
 import "./TeamMembersModal.css";
+import { useTranslation } from "react-i18next";
 
 Modal.setAppElement('#root');
 
 const TeamMembersModal = ({ isOpen, onClose, team, onTeamUpdated }) => {
   const { theme } = useContext(ThemeContext);
+  const { t } = useTranslation();
   const [members, setMembers] = useState([]);
   const [availableUsers, setAvailableUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -17,7 +19,6 @@ const TeamMembersModal = ({ isOpen, onClose, team, onTeamUpdated }) => {
 
   useEffect(() => {
     if (isOpen && team) {
-      console.log("TeamMembersModal opened with team:", team);
       fetchData();
     } else {
       setMembers([]);
@@ -54,9 +55,9 @@ const TeamMembersModal = ({ isOpen, onClose, team, onTeamUpdated }) => {
       if (error.response) {
         console.error('Response data:', error.response.data);
         console.error('Response status:', error.response.status);
-        setError(`Failed to load team data: ${error.response.data.message || error.message}`);
+        setError(`${t("failedToLoadTeamData")}: ${error.response.data.message || error.message}`);
       } else {
-        setError('Failed to load team data. Please try again.');
+        setError(t("failedToLoadTeamData"));
       }
     } finally {
       setIsLoading(false);
@@ -106,7 +107,7 @@ const TeamMembersModal = ({ isOpen, onClose, team, onTeamUpdated }) => {
       }
     } catch (error) {
       console.error("Error adding team members:", error);
-      setError("Failed to add members to the team. Please try again.");
+      setError(t("failedToAddMembers"));
     } finally {
       setIsSubmitting(false);
     }
@@ -139,7 +140,7 @@ const TeamMembersModal = ({ isOpen, onClose, team, onTeamUpdated }) => {
       }
     } catch (error) {
       console.error("Error removing team member:", error);
-      setError("Failed to remove member from the team. Please try again.");
+      setError(t("failedToRemoveMember"));
     } finally {
       setIsSubmitting(false);
     }
@@ -149,12 +150,12 @@ const TeamMembersModal = ({ isOpen, onClose, team, onTeamUpdated }) => {
     <Modal
       isOpen={isOpen}
       onRequestClose={onClose}
-      contentLabel="Team Members Modal"
+      contentLabel={t("teamMembers")}
       className={`team-members-modal-content ${theme}`}
       overlayClassName="team-members-modal-overlay"
     >
       <div className="team-members-modal-header">
-        <h2>{team ? `${team.name} - Team Members` : 'Team Members'}</h2>
+        <h2>{team ? `${team.name} - ${t("teamMembers")}` : t("teamMembers")}</h2>
         <button className="team-members-modal-close" onClick={onClose}>&times;</button>
       </div>
 
@@ -162,11 +163,11 @@ const TeamMembersModal = ({ isOpen, onClose, team, onTeamUpdated }) => {
         {error && <div className="team-members-modal-error">{error}</div>}
 
         {isLoading ? (
-          <div className="team-members-modal-loading">Loading team data...</div>
+          <div className="team-members-modal-loading">{t("loadingTeamData")}</div>
         ) : (
           <>
             <div className="team-members-section">
-              <h3>Current Members <span>({members.length})</span></h3>
+              <h3>{t("currentMembers")} <span>({members.length})</span></h3>
               {members.length > 0 ? (
                 <div className="team-members-list">
                   {members.map(member => (
@@ -179,7 +180,7 @@ const TeamMembersModal = ({ isOpen, onClose, team, onTeamUpdated }) => {
                         className="team-member-remove-btn"
                         onClick={() => handleRemoveMember(member._id)}
                         disabled={isSubmitting}
-                        title="Remove from team"
+                        title={t("delete")}
                       >
                         <i className="fas fa-times"></i>
                       </button>
@@ -187,12 +188,12 @@ const TeamMembersModal = ({ isOpen, onClose, team, onTeamUpdated }) => {
                   ))}
                 </div>
               ) : (
-                <div className="no-members-message">This team has no members.</div>
+                <div className="no-members-message">{t("noMembersMessage")}</div>
               )}
             </div>
 
             <div className="team-members-section">
-              <h3>Available Users <span>({availableUsers.length})</span></h3>
+              <h3>{t("availableUsers")} <span>({availableUsers.length})</span></h3>
               {availableUsers.length > 0 ? (
                 <>
                   <div className="team-available-users-list">
@@ -220,12 +221,12 @@ const TeamMembersModal = ({ isOpen, onClose, team, onTeamUpdated }) => {
                       onClick={handleAddMembers}
                       disabled={isSubmitting || selectedUsers.length === 0}
                     >
-                      Add Selected ({selectedUsers.length})
+                      {t("addSelected")} ({selectedUsers.length})
                     </button>
                   </div>
                 </>
               ) : (
-                <div className="no-available-users">No available users found.</div>
+                <div className="no-available-users">{t("noAvailableUsers")}</div>
               )}
             </div>
           </>
@@ -233,7 +234,7 @@ const TeamMembersModal = ({ isOpen, onClose, team, onTeamUpdated }) => {
       </div>
 
       <div className="team-members-modal-footer">
-        <button className="team-members-modal-close-btn" onClick={onClose}>Close</button>
+        <button className="team-members-modal-close-btn" onClick={onClose}>{t("close")}</button>
       </div>
     </Modal>
   );

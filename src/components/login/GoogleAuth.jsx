@@ -3,10 +3,12 @@ import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../utils/axiosInstance";
 import { setAuthData } from "../../utils/auth";
+import { useTranslation } from "react-i18next";
 import "../../App.css";
 
 const GoogleAuth = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleSuccess = async (response) => {
     try {
@@ -15,10 +17,8 @@ const GoogleAuth = () => {
         token: response.credential
       });
 
-      console.log("Server response:", res.data);
 
       if (res.data.success && res.data.user && res.data.user.token) {
-        // Store token and user data
         setAuthData(res.data.user.token, res.data.user);
         navigate("/dashboard", { replace: true });
       } else {
@@ -49,7 +49,7 @@ const GoogleAuth = () => {
               disabled={renderProps.disabled}
               className="custom-google-button"
             >
-              Sign in with Google
+              {t("signInWithGoogle")}
             </button>
           )}
         />
