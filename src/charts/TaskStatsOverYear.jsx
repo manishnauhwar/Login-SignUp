@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Line } from "react-chartjs-2";
 import { Chart, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend } from "chart.js";
+import { LanguageContext } from "../utils/LanguageContext";
 
 Chart.register(LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend);
 
 const TaskStatsOverYears = ({ taskStats }) => {
+  const { translate } = useContext(LanguageContext);
   const years = taskStats.map((stat) => stat.year);
   const totalTasks = taskStats.map((stat) => stat.totalTasks);
   const completedTasks = taskStats.map((stat) => stat.completedTasks);
@@ -13,13 +15,13 @@ const TaskStatsOverYears = ({ taskStats }) => {
     labels: years,
     datasets: [
       {
-        label: "Total Tasks",
+        label: translate("totalTasks"),
         data: totalTasks,
         borderColor: "#3e95cd",
         fill: false
       },
       {
-        label: "Completed Tasks",
+        label: translate("completedTasks"),
         data: completedTasks,
         borderColor: "#8e5ea2",
         fill: false
@@ -27,9 +29,20 @@ const TaskStatsOverYears = ({ taskStats }) => {
     ]
   };
 
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      title: {
+        display: true,
+        text: translate("taskStatsOverYear")
+      }
+    }
+  };
+
   return (
     <div className="chart-box">
-      <Line data={data} />
+      <Line data={data} options={options} />
     </div>
   );
 };

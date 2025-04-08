@@ -7,12 +7,9 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("accessToken");
+    const token = localStorage.getItem("accessToken") || localStorage.getItem("token");
     if (token) {
       config.headers["Authorization"] = `Bearer ${token}`;
-      console.log("Request headers:", config.headers);
-    } else {
-      console.log("No token found in localStorage");
     }
     return config;
   },
@@ -23,11 +20,18 @@ axiosInstance.interceptors.request.use(
 );
 
 axiosInstance.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    return response;
+  },
   (error) => {
-    if (error.response?.status === 401) {
+    console.error(`API Error for ${error.config?.url}:`, {
+      status: error.response?.status,
+      message: error.response?.data?.message || error.message
+    });
 
+    if (error.response?.status === 401) {
       localStorage.removeItem("accessToken");
+      localStorage.removeItem("token");
       localStorage.removeItem("user");
 
       window.location.href = "/login";

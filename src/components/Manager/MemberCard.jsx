@@ -24,7 +24,7 @@ const MemberCard = ({ member, onTaskDrop }) => {
       data-theme={theme}
       data-is-over={isOver}
     >
-      <h3>{member.username}</h3>
+      <h3>{member.fullname}</h3>
       <p><strong>Role:</strong> {member.role}</p>
       <p><strong>Email:</strong> {member.email}</p>
     </div>

@@ -1,4 +1,4 @@
-/*.google-button {
+.google-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -13,7 +13,7 @@
   cursor: pointer;
   transition: background 0.3s ease, transform 0.2s;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  width: 100%; 
+  width: 100%;
   max-width: 250px;
 }
 
@@ -27,4 +27,3 @@
   font-size: 20px;
   color: #db4437;
 }
-*/

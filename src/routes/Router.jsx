@@ -3,12 +3,13 @@ import { isAuthenticated } from "../utils/auth";
 import Login from "../components/login/Login";
 import Signup from "../components/login/Signup";
 import ForgotPassword from "../components/login/ForgotPassword";
+import ResetPassword from "../components/login/ResetPassword";
 import Manager from "../components/Manager/Manager";
 import KanbanBoard from "../components/kanbanBoard/KanbanBoard";
 import TaskManagement from "../components/TaskManager/TaskManagement";
-import Teams from "../components/TaskManager/Teams";
+import Teams from "../components/Team/Teams";
 import User from "../components/User/User";
-import Profile from "../components/Dashboard/Profile";
+import Profile from "../components/Profile/Profile";
 import Settings from "../components/Dashboard/Settings";
 import Dashboard from "../components/Dashboard/Dashboard";
 import ProtectedRoute from "./ProtectedRoute";
@@ -22,6 +23,7 @@ const AppRouter = () => {
         <Route path="/login" element={auth ? <Navigate to="/dashboard" /> : <Login />} />
         <Route path="/signup" element={auth ? <Navigate to="/dashboard" /> : <Signup />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route path="/manager" element={<ProtectedRoute><Manager /></ProtectedRoute>} />
         <Route path="/kanbanboard" element={<ProtectedRoute><KanbanBoard /></ProtectedRoute>} />
         <Route path="/task-management" element={<ProtectedRoute><TaskManagement /></ProtectedRoute>} />

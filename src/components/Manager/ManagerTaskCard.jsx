@@ -5,13 +5,41 @@ import { ThemeContext } from "../../utils/ThemeContext";
 
 const ITEM_TYPE = "ASSIGNED_TASK";
 
+const getPriorityIcon = (priority) => {
+  switch (priority) {
+    case 'High':
+      return 'fa-solid fa-circle-exclamation';
+    case 'Medium':
+      return 'fa-solid fa-exclamation';
+    case 'Low':
+      return 'fa-solid fa-circle-check';
+    default:
+      return 'fa-solid fa-circle';
+  }
+};
+
+const getStatusIcon = (status) => {
+  switch (status) {
+    case 'Pending':
+      return 'fa-solid fa-clock';
+    case 'In progress':
+      return 'fa-solid fa-spinner fa-spin';
+    case 'To Do':
+      return 'fa-solid fa-list-check';
+    case 'Completed':
+      return 'fa-solid fa-check';
+    default:
+      return 'fa-solid fa-circle';
+  }
+};
+
 const formatDate = (dateString) => {
-  if (!dateString) return '';
   const date = new Date(dateString);
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const year = date.getFullYear();
-  return `${day}-${month}-${year}`;
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  });
 };
 
 const ManagerTaskCard = ({ task }) => {
@@ -35,9 +63,20 @@ const ManagerTaskCard = ({ task }) => {
       }}
     >
       <h3>{task.title}</h3>
-      <p><strong>Due:</strong> {formatDate(task.dueDate)}</p>
-      <p data-priority={task.priority}><strong>Priority:</strong> {task.priority}</p>
-      <p><strong>Status:</strong> {task.status}</p>
+      <div className="date-container">
+        <i className="fa-regular fa-calendar"></i>
+        <span>{formatDate(task.dueDate)}</span>
+      </div>
+      <div className="status-badges">
+        <span className="badge" data-priority={task.priority}>
+          <i className={getPriorityIcon(task.priority)}></i>
+          {task.priority}
+        </span>
+        <span className="badge" data-status={task.status}>
+          <i className={getStatusIcon(task.status)}></i>
+          {task.status}
+        </span>
+      </div>
     </div>
   );
 };

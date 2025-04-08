@@ -1,16 +1,23 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Doughnut } from "react-chartjs-2";
 import { Chart, ArcElement, Tooltip, Legend } from "chart.js";
+import { LanguageContext } from "../utils/LanguageContext";
 
 Chart.register(ArcElement, Tooltip, Legend);
 
 const TaskStatusChart = ({ tasks }) => {
-  const completed = tasks.filter((t) => t.status === "Completed").length;
-  const todo = tasks.filter((t) => t.status === "To Do").length;
-  const inProgress = tasks.filter((t) => t.status === "In progress").length;
+  const { translate } = useContext(LanguageContext);
+
+  const completed = tasks.filter((t) => t.status === "Completed" || t.status === translate("statuses.Completed")).length;
+  const todo = tasks.filter((t) => t.status === "To Do" || t.status === translate("statuses.To Do")).length;
+  const inProgress = tasks.filter((t) => t.status === "In progress" || t.status === translate("statuses.In progress")).length;
 
   const data = {
-    labels: ["Completed", "To Do", "In Progress"],
+    labels: [
+      translate("statuses.Completed"),
+      translate("statuses.To Do"),
+      translate("statuses.In progress")
+    ],
     datasets: [
       {
         data: [completed, todo, inProgress],
@@ -29,7 +36,7 @@ const TaskStatusChart = ({ tasks }) => {
       },
       title: {
         display: true,
-        text: 'Task Status Distribution'
+        text: translate("taskStatusDistribution")
       }
     }
   };
