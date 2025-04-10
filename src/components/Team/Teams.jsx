@@ -292,14 +292,12 @@ const Teams = () => {
         });
 
         if (assignedTeam.members && assignedTeam.members.length > 0) {
-          console.log(`Sending notifications to ${assignedTeam.members.length} team members`);
 
           const messageForMembers = `A new task "${response.data.title}" has been assigned to your team "${assignedTeam.name}"`;
 
           for (const member of assignedTeam.members) {
             if ((member._id || member.id) !== managerId) {
               const memberId = member._id || member.id;
-              console.log(`Sending notification to team member: ${memberId}`);
 
               try {
                 await new Promise(resolve => setTimeout(resolve, 100));
@@ -312,7 +310,6 @@ const Teams = () => {
                   sender: userId
                 });
 
-                console.log(`Notification sent successfully to member ${memberId}`);
               } catch (notifError) {
                 console.error(`Failed to send notification to member ${memberId}:`, notifError);
               }

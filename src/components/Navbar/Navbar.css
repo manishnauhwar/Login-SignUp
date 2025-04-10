@@ -480,3 +480,49 @@
 [data-theme="dark"] .search-bar input::placeholder {
   color: #adb5bd;
 }
+
+/* Dark theme for notification dropdown */
+[data-theme="dark"] .notification-dropdown {
+  background: #1e2237;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .notification-dropdown li.read {
+  background-color: #252a41;
+  color: #a0aec0;
+}
+
+[data-theme="dark"] .notification-dropdown li.unread {
+  background-color: #1e2237;
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .notification-dropdown li.unread::before {
+  background: #74b9ff;
+}
+
+[data-theme="dark"] .notification-dropdown li:hover {
+  background-color: #2d3748;
+}
+
+[data-theme="dark"] .notification-title {
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .notification-message {
+  color: #a0aec0;
+}
+
+[data-theme="dark"] .notification-action-btn {
+  color: #a0aec0;
+}
+
+[data-theme="dark"] .notification-action-btn:hover {
+  color: #e2e8f0;
+  background-color: #4a5568;
+}
+
+[data-theme="dark"] .no-notifications {
+  color: #a0aec0;
+}
