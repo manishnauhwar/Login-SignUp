@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import img from "../../assets/img.webp";
 import GoogleAuth from "../login/GoogleAuth";
@@ -12,6 +12,7 @@ const Login = () => {
   const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [authError, setAuthError] = useState("");
+  const [formValid, setFormValid] = useState(false);
 
   const [formState, setFormState] = useState({
     email: "",
@@ -21,6 +22,34 @@ const Login = () => {
       password: "",
     },
   });
+
+  useEffect(() => {
+    const checkForAutofill = () => {
+      const emailInput = document.querySelector('input[name="email"]');
+      const passwordInput = document.querySelector('input[name="password"]');
+
+      if (emailInput && passwordInput) {
+        if (emailInput.value && passwordInput.value) {
+          setFormState(prev => ({
+            ...prev,
+            email: emailInput.value,
+            password: passwordInput.value
+          }));
+          setFormValid(true);
+        }
+      }
+    };
+
+    checkForAutofill();
+    const timeoutId = setTimeout(checkForAutofill, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, []);
+
+  useEffect(() => {
+    const isValid = formState.email.trim() !== "" && formState.password.trim() !== "";
+    setFormValid(isValid);
+  }, [formState.email, formState.password]);
 
   const validateEmail = (email) => {
     const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -40,7 +69,7 @@ const Login = () => {
       [name]: value,
       errors: {
         ...prev.errors,
-        [name]: "" 
+        [name]: ""
       }
     }));
   };
@@ -54,7 +83,7 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setAuthError(""); 
+    setAuthError("");
 
     const emailValid = validateEmail(formState.email);
     const passwordValid = validatePassword(formState.password);
@@ -90,8 +119,6 @@ const Login = () => {
       setIsLoading(false);
     }
   };
-
-  const isFormValid = formState.email.trim() !== "" && formState.password.trim() !== "";
 
   return (
     <div className="login-container">
@@ -139,7 +166,7 @@ const Login = () => {
           <button
             type="submit"
             className="btn-primary"
-            disabled={!isFormValid || isLoading}
+            disabled={!formValid || isLoading}
           >
             {isLoading ? t("loggingIn") : t("login")}
           </button>
