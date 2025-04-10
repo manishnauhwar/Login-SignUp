@@ -52,13 +52,12 @@
 /* Table Styling */
 .table-box {
   width: 100%;
-  background: #fff;
   border-radius: 12px;
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 50px;
-  overflow-y: auto;
-  max-height: 400px;
+  margin-bottom: 20px;
   position: relative;
+  overflow: hidden;
+  max-height: none;
 }
 
 .table-box::-webkit-scrollbar {
@@ -72,9 +71,11 @@
 
 .due-date-table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   border-radius: 12px;
   overflow: hidden;
+  background: transparent;
 }
 
 .due-date-table thead {
@@ -94,12 +95,52 @@
   z-index: 100;
 }
 
+/* Set specific widths for each column */
+.due-date-table th:nth-child(1) {
+  width: 20%;
+}
+
+/* Task Title */
+.due-date-table th:nth-child(2) {
+  width: 12%;
+}
+
+/* Created On */
+.due-date-table th:nth-child(3) {
+  width: 12%;
+}
+
+/* Due Date */
+.due-date-table th:nth-child(4) {
+  width: 10%;
+}
+
+/* Priority */
+.due-date-table th:nth-child(5) {
+  width: 12%;
+}
+
+/* Status */
+.due-date-table th:nth-child(6) {
+  width: 22%;
+}
+
+/* Actions */
+.due-date-table th:nth-child(7) {
+  width: 12%;
+}
+
+/* Complete */
+
 .due-date-table th,
 .due-date-table td {
   padding: 14px;
   border: 1px solid #ddd;
   text-align: center;
   font-size: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .due-date-table tbody tr:nth-child(even) {
@@ -257,6 +298,12 @@
   background: #218838;
 }
 
+.save-btn:disabled {
+  background: #88c19b;
+  cursor: not-allowed;
+  animation: pulse 1.5s infinite;
+}
+
 .modal-close-btn {
   position: absolute;
   width: 35px;
@@ -357,4 +404,130 @@
   outline: none;
   border-color: #007bff;
   box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+/* Pagination styling */
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20px 0;
+  padding: 10px;
+  background-color: transparent;
+  border-radius: 8px;
+}
+
+.pagination-button {
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin: 0 10px;
+  transition: background-color 0.3s;
+  min-width: 100px;
+  font-weight: bold;
+}
+
+.pagination-button:hover {
+  background-color: #0056b3;
+}
+
+.pagination-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  margin: 0 15px;
+  font-size: 14px;
+  color: #495057;
+  font-weight: 500;
+}
+
+.empty-row td {
+  height: 56px;
+  background-color: #f8f9fa;
+  border: 1px solid #ddd;
+}
+
+[data-theme="dark"] .empty-row td {
+  background-color: #2c2c2c;
+  border: 1px solid #444;
+}
+
+.no-tasks-row td {
+  padding: 30px;
+  text-align: center;
+  font-size: 16px;
+  color: #6c757d;
+  background-color: #f8f9fa;
+}
+
+[data-theme="dark"] .no-tasks-row td {
+  color: #adb5bd;
+  background-color: #2c2c2c;
+}
+
+.no-tasks-message {
+  font-weight: 500;
+}
+
+.due-date-table tbody {
+  min-height: 280px;
+  display: table-row-group;
+}
+
+.due-date-table tr {
+  height: 56px;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+.task-button:disabled:not(.disabled) {
+  animation: pulse 1.5s infinite;
+  background: #007bff;
+  opacity: 0.8;
+}
+
+.delete-btn:disabled {
+  background: #e69a9a;
+  cursor: not-allowed;
+  animation: pulse 1.5s infinite;
+}
+
+[data-theme="dark"] .due-date-table tbody tr:nth-child(even) {
+  background: #2c2c2c;
+}
+
+[data-theme="dark"] .due-date-table tbody tr:nth-child(odd) {
+  background: #212121;
+}
+
+[data-theme="dark"] .due-date-table th {
+  background: #212121;
+  border-color: #444;
+}
+
+[data-theme="dark"] .due-date-table td {
+  border-color: #444;
+  color: #e9ecef;
+}
+
+[data-theme="dark"] .due-date-table tbody tr:hover {
+  background: #3a3a3a;
 }

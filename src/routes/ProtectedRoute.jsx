@@ -17,7 +17,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   if (user && allowedRoles.includes(user.role)) {
     return children;
   }
-  
+
   return <Navigate to="/dashboard" replace />;
 };
 

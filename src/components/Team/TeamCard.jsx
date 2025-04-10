@@ -6,14 +6,28 @@ import { useTranslation } from "react-i18next";
 
 const ITEM_TYPE = "TASK";
 
-const TeamCard = ({ team, onDropTask, onEditTeam, onDeleteTeam, onViewMembers, isAdmin, isManager = false }) => {
+const TeamCard = ({
+  team,
+  onDropTask,
+  onEditTeam,
+  onDeleteTeam,
+  onViewMembers,
+  isAdmin,
+  isManager = false,
+  isAssigningTask = false,
+  assigningTaskId = null,
+  isDeletingTeam = false,
+  isLoadingTeams = false
+}) => {
   const { theme } = useContext(ThemeContext);
   const { t } = useTranslation();
   const [{ isOver }, drop] = useDrop(() => ({
     accept: ITEM_TYPE,
     drop: (item) => {
-      if (item && item._id) {
+      if (item && item._id && !isAssigningTask) {
         onDropTask(item._id, team._id);
+      } else if (isAssigningTask) {
+        console.log("Task assignment in progress, cannot drop");
       } else {
         console.error("Invalid item dropped:", item);
       }
@@ -21,16 +35,25 @@ const TeamCard = ({ team, onDropTask, onEditTeam, onDeleteTeam, onViewMembers, i
     collect: (monitor) => ({
       isOver: monitor.isOver(),
     }),
+    canDrop: () => !isAssigningTask && !isLoadingTeams,
   }));
 
   const memberCount = team.members ? team.members.length : 0;
+  const isTaskBeingAssigned = isAssigningTask;
+  const buttonsDisabled = isTaskBeingAssigned || isLoadingTeams;
 
   return (
     <div
       ref={drop}
-      className={`team-group ${isOver ? 'is-over' : ''}`}
+      className={`team-group ${isOver ? 'is-over' : ''} ${isTaskBeingAssigned ? 'task-assigning' : ''}`}
       data-theme={theme}
     >
+      {isTaskBeingAssigned && (
+        <div className="team-loading-overlay">
+          <div className="team-loading-spinner"></div>
+          <p className="loading-message">{t('assigningTask') || 'Assigning task...'}</p>
+        </div>
+      )}
       <div className="team-card-header">
         <h2 className="team-name">{team.name}</h2>
         <div className="team-actions">
@@ -40,6 +63,7 @@ const TeamCard = ({ team, onDropTask, onEditTeam, onDeleteTeam, onViewMembers, i
                 className="team-view-btn"
                 onClick={() => onViewMembers(team)}
                 title={t("viewMembers")}
+                disabled={buttonsDisabled}
               >
                 <i className="fas fa-users"></i>
               </button>
@@ -47,6 +71,7 @@ const TeamCard = ({ team, onDropTask, onEditTeam, onDeleteTeam, onViewMembers, i
                 className="team-edit-btn"
                 onClick={() => onEditTeam(team)}
                 title={t("editTeam")}
+                disabled={buttonsDisabled}
               >
                 <i className="fas fa-edit"></i>
               </button>
@@ -57,6 +82,7 @@ const TeamCard = ({ team, onDropTask, onEditTeam, onDeleteTeam, onViewMembers, i
               className="team-delete-btn"
               onClick={() => onDeleteTeam(team._id)}
               title={t("delete")}
+              disabled={buttonsDisabled}
             >
               <i className="fas fa-trash-alt"></i>
             </button>

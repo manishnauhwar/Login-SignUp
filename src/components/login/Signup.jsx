@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 const Signup = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const [isLoading, setIsLoading] = useState(false);
 
   const [formState, setFormState] = useState({
     fullname: "",
@@ -21,6 +22,12 @@ const Signup = () => {
       password: "",
       confirmPassword: "",
     },
+    touched: {
+      fullname: false,
+      email: false,
+      password: false,
+      confirmPassword: false,
+    }
   });
 
   const validateEmail = (email) => {
@@ -33,7 +40,13 @@ const Signup = () => {
   };
 
   const validatefullname = (fullname) => {
-    return fullname.length >= 3;
+    const startsWithAlphabets = /^[A-Za-z]{3,}[A-Za-z\s]*[A-Za-z]$/;
+    const alphabetCount = fullname.replace(/[^A-Za-z]/g, '').length;
+    return startsWithAlphabets.test(fullname) && alphabetCount <= 30;
+  };
+
+  const normalizeName = (name) => {
+    return name.replace(/\s+/g, ' ').trim();
   };
 
   const handleInputChange = (e) => {
@@ -43,23 +56,70 @@ const Signup = () => {
       [name]: value,
       errors: {
         ...prev.errors,
-        [name]: name === 'email'
-          ? (validateEmail(value) ? "" : t("invalidEmailFormat"))
-          : name === 'fullname'
-            ? (validatefullname(value) ? "" : t("fullnameMinLength"))
-            : name === 'password'
-              ? (validatePassword(value) ? "" : t("passwordMinLength"))
-              : name === 'confirmPassword'
-                ? (value === formState.password ? "" : t("passwordsDoNotMatch"))
-                : ""
+        [name]: ""
+      }
+    }));
+  };
+
+  const handleInputBlur = (e) => {
+    const { name, value } = e.target;
+
+    if (name === 'fullname' && value) {
+      const normalizedName = normalizeName(value);
+      if (normalizedName !== value) {
+        setFormState(prev => ({
+          ...prev,
+          [name]: normalizedName
+        }));
+      }
+    }
+
+    let error = "";
+    if (name === 'email' && value) {
+      error = validateEmail(value) ? "" : t("invalidEmailFormat");
+    } else if (name === 'fullname' && value) {
+      const normalizedName = normalizeName(value);
+      if (!/^[A-Za-z\s]+$/.test(normalizedName)) {
+        error = t("fullnameAlphabetsOnly");
+      } else if (!/^[A-Za-z]{3,}/.test(normalizedName)) {
+        error = t("fullnameMinLength");
+      } else if (normalizedName.replace(/[^A-Za-z]/g, '').length > 30) {
+        error = t("fullnameMaxLength", "Fullname cannot exceed 30 alphabetic characters");
+      } else if (/\s$/.test(normalizedName)) {
+        error = t("fullnameNoTrailingSpace", "Fullname cannot end with a space");
+      }
+    } else if (name === 'password' && value) {
+      error = validatePassword(value) ? "" : t("passwordMinLength");
+    } else if (name === 'confirmPassword' && value) {
+      error = (value === formState.password) ? "" : t("passwordsDoNotMatch");
+    }
+
+    setFormState(prev => ({
+      ...prev,
+      touched: {
+        ...prev.touched,
+        [name]: true
+      },
+      errors: {
+        ...prev.errors,
+        [name]: error
       }
     }));
   };
 
   const handleSignup = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
 
-    const fullnameValid = validatefullname(formState.fullname);
+    const normalizedFullname = normalizeName(formState.fullname);
+    if (normalizedFullname !== formState.fullname) {
+      setFormState(prev => ({
+        ...prev,
+        fullname: normalizedFullname
+      }));
+    }
+
+    const fullnameValid = validatefullname(normalizedFullname);
     const emailValid = validateEmail(formState.email);
     const passwordValid = validatePassword(formState.password);
     const passwordsMatch = formState.password === formState.confirmPassword;
@@ -67,50 +127,47 @@ const Signup = () => {
     if (!fullnameValid || !emailValid || !passwordValid || !passwordsMatch) {
       setFormState(prev => ({
         ...prev,
+        touched: {
+          fullname: true,
+          email: true,
+          password: true,
+          confirmPassword: true
+        },
         errors: {
-          fullname: fullnameValid ? "" : t("fullnameMinLength"),
+          fullname: !fullnameValid
+            ? (!(/^[A-Za-z\s]+$/.test(normalizedFullname))
+              ? t("fullnameAlphabetsOnly")
+              : !/^[A-Za-z]{3,}/.test(normalizedFullname)
+                ? t("fullnameMinLength")
+                : normalizedFullname.replace(/[^A-Za-z]/g, '').length > 30
+                  ? t("fullnameMaxLength", "Fullname cannot exceed 30 alphabetic characters")
+                  : /\s$/.test(normalizedFullname)
+                    ? t("fullnameNoTrailingSpace", "Fullname cannot end with a space")
+                    : t("fullnameMinLength"))
+            : "",
           email: emailValid ? "" : t("invalidEmailFormat"),
           password: passwordValid ? "" : t("passwordMinLength"),
           confirmPassword: passwordsMatch ? "" : t("passwordsDoNotMatch")
         }
       }));
+      setIsLoading(false);
       return;
     }
 
     try {
-
       const response = await axiosInstance.post("/users/signup", {
-        fullname: formState.fullname,
+        fullname: normalizedFullname,
         email: formState.email,
         password: formState.password
       });
 
-
       if (response.status === 200 || response.status === 201) {
-        try {
-          const loginResponse = await axiosInstance.post("/users/login", {
-            email: formState.email,
-            password: formState.password
-          });
-
-
-          if (loginResponse.data && loginResponse.data.token) {
-            localStorage.setItem("accessToken", loginResponse.data.token);
-            localStorage.setItem("user", JSON.stringify(loginResponse.data.user));
-
-            navigate("/login");
-          } else {
-            console.error("Missing token in login response");
-            navigate("/login", {
-              state: { message: "Account created. Please log in to continue." }
-            });
+        navigate("/login", {
+          state: {
+            message: "Account created successfully. Please log in to continue.",
+            email: formState.email
           }
-        } catch (loginError) {
-          console.error("Login after signup failed:", loginError);
-          navigate("/login", {
-            state: { message: "Account created successfully. Please log in." }
-          });
-        }
+        });
       }
     } catch (error) {
       console.error("Error during signup:", error);
@@ -129,9 +186,13 @@ const Signup = () => {
         ...prev,
         errors: {
           ...prev.errors,
-          email: errorMessage
+          confirmPassword: errorMessage
         }
       }));
+    } finally {
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 3000);
     }
   };
 
@@ -166,9 +227,12 @@ const Signup = () => {
             placeholder={t("fullname")}
             value={formState.fullname}
             onChange={handleInputChange}
-            className={`input ${formState.errors.fullname ? "input-error" : ""}`}
+            onBlur={handleInputBlur}
+            className={`input ${formState.touched.fullname && formState.errors.fullname ? "input-error" : ""}`}
           />
-          {formState.errors.fullname && <p className="error-text">{formState.errors.fullname}</p>}
+          {formState.touched.fullname && formState.errors.fullname && (
+            <p className="error-text">{formState.errors.fullname}</p>
+          )}
 
           <input
             type="email"
@@ -176,9 +240,12 @@ const Signup = () => {
             placeholder={t("email")}
             value={formState.email}
             onChange={handleInputChange}
-            className={`input ${formState.errors.email ? "input-error" : ""}`}
+            onBlur={handleInputBlur}
+            className={`input ${formState.touched.email && formState.errors.email ? "input-error" : ""}`}
           />
-          {formState.errors.email && <p className="error-text">{formState.errors.email}</p>}
+          {formState.touched.email && formState.errors.email && (
+            <p className="error-text">{formState.errors.email}</p>
+          )}
 
           <input
             type="password"
@@ -186,9 +253,12 @@ const Signup = () => {
             placeholder={t("password")}
             value={formState.password}
             onChange={handleInputChange}
-            className={`input ${formState.errors.password ? "input-error" : ""}`}
+            onBlur={handleInputBlur}
+            className={`input ${formState.touched.password && formState.errors.password ? "input-error" : ""}`}
           />
-          {formState.errors.password && <p className="error-text">{formState.errors.password}</p>}
+          {formState.touched.password && formState.errors.password && (
+            <p className="error-text">{formState.errors.password}</p>
+          )}
 
           <input
             type="password"
@@ -196,16 +266,19 @@ const Signup = () => {
             placeholder={t("confirmPassword")}
             value={formState.confirmPassword}
             onChange={handleInputChange}
-            className={`input ${formState.errors.confirmPassword ? "input-error" : ""}`}
+            onBlur={handleInputBlur}
+            className={`input ${formState.touched.confirmPassword && formState.errors.confirmPassword ? "input-error" : ""}`}
           />
-          {formState.errors.confirmPassword && <p className="error-text">{formState.errors.confirmPassword}</p>}
+          {formState.touched.confirmPassword && formState.errors.confirmPassword && (
+            <p className="error-text">{formState.errors.confirmPassword}</p>
+          )}
 
           <button
             type="submit"
             className="btn-primary"
-            disabled={!isFormValid}
+            disabled={!isFormValid || isLoading}
           >
-            {t("signUp")}
+            {isLoading ? t("creatingAccount") : t("signUp")}
           </button>
         </form>
 

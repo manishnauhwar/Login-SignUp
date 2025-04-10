@@ -4,18 +4,21 @@ import { IoLogOutOutline, IoNotificationsOutline, IoTrashOutline } from "react-i
 import { CgProfile } from "react-icons/cg";
 import { BsSun, BsMoon } from "react-icons/bs";
 import { useNotifications } from "../../utils/NotificationContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ThemeContext } from "../../utils/ThemeContext";
 import { LanguageContext } from "../../utils/LanguageContext";
 
 const Navbar = ({ handleLogout, isSidebarOpen, searchQuery, setSearchQuery }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { notifications, markAsRead, deleteNotification } = useNotifications();
   const { theme, toggleTheme } = useContext(ThemeContext);
   const { translate } = useContext(LanguageContext);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const unreadCount = notifications.filter(n => !n.read).length;
+
+  const isSettingsPage = location.pathname === "/settings";
 
   const handleProfile = () => {
     navigate("/profile");
@@ -52,7 +55,7 @@ const Navbar = ({ handleLogout, isSidebarOpen, searchQuery, setSearchQuery }) =>
 
   return (
     <div className={`top-nav ${isSidebarOpen ? "sidebar-expanded" : "sidebar-collapsed"}`} data-theme={theme}>
-      <div className="search-bar">
+      <div className="search-bar" style={{ visibility: isSettingsPage ? 'hidden' : 'visible' }}>
         <input
           type="text"
           placeholder="Search tasks..."
@@ -60,6 +63,7 @@ const Navbar = ({ handleLogout, isSidebarOpen, searchQuery, setSearchQuery }) =>
           onChange={(e) => setSearchQuery && setSearchQuery(e.target.value)}
           aria-label="Search tasks"
           title="Search tasks"
+          disabled={isSettingsPage}
         />
       </div>
       <div className="nav-actions">

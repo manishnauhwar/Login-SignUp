@@ -26,11 +26,14 @@ const Sidebar = ({ isOpen = false, setIsOpen }) => {
   const getProfilePictureUrl = (relativePath) => {
     if (!relativePath) return defaultProfileImg;
 
-    if (relativePath.startsWith('data:')) return relativePath;
+    if (relativePath.startsWith('data:') || relativePath.startsWith('http')) {
+      return relativePath;
+    }
 
-    if (relativePath.startsWith('http')) return relativePath;
+    const baseURL = import.meta.env.MODE === 'production'
+      ? import.meta.env.VITE_PRO_URL
+      : (import.meta.env.VITE_DEV_URL || "http://localhost:5000");
 
-    const baseURL = window.location.origin.replace('3000', '5000');
     return baseURL + relativePath;
   };
 

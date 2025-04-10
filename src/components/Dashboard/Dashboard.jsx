@@ -6,7 +6,7 @@ import DueDateTableWithModal from "./DueDateModel";
 import TaskPriorityChart from "../../charts/TaskPriorityChart";
 import TaskStatusChart from "../../charts/TaskStatusChart";
 import TaskSummaryCard from "./TaskSummaryCard";
-import TaskStatsOverYear from "../../charts/TaskStatsOverYear";
+import TaskCompletionTrend from "../../charts/TaskStatsOverYear";
 import { ThemeContext } from "../../utils/ThemeContext";
 import { LanguageContext } from "../../utils/LanguageContext";
 import "./Dashboard.css";
@@ -23,7 +23,6 @@ const Dashboard = () => {
   const { theme } = useContext(ThemeContext);
   const { translate, translateTaskContent } = useContext(LanguageContext);
   const [user, setUser] = useState(null);
-  const [taskStats, setTaskStats] = useState([]);
   const [teamMembers, setTeamMembers] = useState([]);
 
   useEffect(() => {
@@ -59,15 +58,6 @@ const Dashboard = () => {
     navigate("/", { replace: true });
   };
 
-  const fetchStats = async () => {
-    try {
-      const response = await axiosInstance.get("/stat/");
-      setTaskStats(response.data);
-    } catch (error) {
-      console.error("Error fetching stats:", error);
-    }
-  };
-
   const fetchData = async () => {
     try {
       const response = await axiosInstance.get("/tasks");
@@ -80,6 +70,7 @@ const Dashboard = () => {
           priority: task.priority || "Low",
           dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split("T")[0] : "",
           createdAt: task.createdAt ? new Date(task.createdAt).toISOString().split("T")[0] : "",
+          updatedAt: task.updatedAt ? new Date(task.updatedAt).toISOString().split("T")[0] : "",
           assignedTo: task.assignedTo || "",
           userId: task.userId
         }));
@@ -115,15 +106,9 @@ const Dashboard = () => {
   useEffect(() => {
     if (user) {
       fetchData();
-      fetchStats();
     }
   }, [navigate, user, teamMembers]);
 
-  useEffect(() => {
-    fetchStats();
-  }, [tasks]);
-
-  // Translated tasks for charts
   const translatedTasks = tasks.map(task => translateTaskContent(task));
 
   const calculateTaskSummary = () => {
@@ -168,12 +153,10 @@ const Dashboard = () => {
                 <div className="previousyear">
                   {tasks.length > 0 && <TaskStatusChart tasks={translatedTasks} />}
                   {tasks.length > 0 && <TaskPriorityChart tasks={translatedTasks} />}
-                  {taskStats.length > 0 && <TaskStatsOverYear taskStats={taskStats} />}
+                  {tasks.length > 0 && <TaskCompletionTrend tasks={tasks} />}
                 </div>
               </div>
-              <div className="data-table">
-                <DueDateTableWithModal tasks={tasks} setTasks={setTasks} searchQuery={searchQuery} userId={user?._id || user?.id} userRole={user?.role} />
-              </div>
+              <DueDateTableWithModal tasks={tasks} setTasks={setTasks} searchQuery={searchQuery} userId={user?._id || user?.id} userRole={user?.role} />
             </>
           )}
         </div>

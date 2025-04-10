@@ -10,6 +10,8 @@ import { useTranslation } from "react-i18next";
 const Login = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const [isLoading, setIsLoading] = useState(false);
+  const [authError, setAuthError] = useState("");
 
   const [formState, setFormState] = useState({
     email: "",
@@ -31,33 +33,35 @@ const Login = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    if (authError) setAuthError("");
+
     setFormState(prev => ({
       ...prev,
       [name]: value,
       errors: {
         ...prev.errors,
-        [name]: name === 'email'
-          ? (validateEmail(value) ? "" : t("invalidEmailFormat"))
-          : (validatePassword(value) ? "" : t("passwordMinLength"))
+        [name]: "" 
       }
     }));
   };
 
+  const handleInputFocus = () => {
+    if (authError) {
+      setAuthError("");
+    }
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+    setAuthError(""); 
 
-    // Validate all fields
     const emailValid = validateEmail(formState.email);
     const passwordValid = validatePassword(formState.password);
 
     if (!emailValid || !passwordValid) {
-      setFormState(prev => ({
-        ...prev,
-        errors: {
-          email: emailValid ? "" : t("invalidEmailFormat"),
-          password: passwordValid ? "" : t("passwordMinLength")
-        }
-      }));
+      setIsLoading(false);
+      setAuthError(t("invalidCredentials"));
       return;
     }
 
@@ -76,25 +80,18 @@ const Login = () => {
     } catch (error) {
       console.error("Error during login:", error);
 
-      let errorMessage = t("errorOccurred");
-
       if (error.code === 'ERR_NETWORK') {
-        errorMessage = "Unable to connect to server. Please check your internet connection.";
-      } else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
+        setAuthError(t("unableToConnect", "Unable to connect to server. Please check your internet connection."));
+      } else {
+        setAuthError(t("invalidCredentials"));
       }
 
-      setFormState(prev => ({
-        ...prev,
-        errors: {
-          ...prev.errors,
-          email: errorMessage
-        }
-      }));
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const isFormValid = validateEmail(formState.email) && validatePassword(formState.password);
+  const isFormValid = formState.email.trim() !== "" && formState.password.trim() !== "";
 
   return (
     <div className="login-container">
@@ -122,9 +119,9 @@ const Login = () => {
             placeholder={t("email")}
             value={formState.email}
             onChange={handleInputChange}
-            className={`input ${formState.errors.email ? "input-error" : ""}`}
+            onFocus={handleInputFocus}
+            className="input"
           />
-          {formState.errors.email && <p className="error-text">{formState.errors.email}</p>}
 
           <input
             type="password"
@@ -132,18 +129,19 @@ const Login = () => {
             placeholder={t("password")}
             value={formState.password}
             onChange={handleInputChange}
-            className={`input ${formState.errors.password ? "input-error" : ""}`}
+            onFocus={handleInputFocus}
+            className={`input ${authError ? "input-error" : ""}`}
           />
-          {formState.errors.password && <p className="error-text">{formState.errors.password}</p>}
+          {authError && <p className="error-text">{authError}</p>}
 
           <Link to="/forgot-password" className="forgot-password">{t("forgotPassword")}</Link>
 
           <button
             type="submit"
             className="btn-primary"
-            disabled={!isFormValid}
+            disabled={!isFormValid || isLoading}
           >
-            {t("login")}
+            {isLoading ? t("loggingIn") : t("login")}
           </button>
         </form>
 

@@ -16,6 +16,7 @@ const TeamMembersModal = ({ isOpen, onClose, team, onTeamUpdated }) => {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState([]);
+  const [removingMemberId, setRemovingMemberId] = useState(null);
 
   useEffect(() => {
     if (isOpen && team) {
@@ -25,6 +26,7 @@ const TeamMembersModal = ({ isOpen, onClose, team, onTeamUpdated }) => {
       setAvailableUsers([]);
       setSelectedUsers([]);
       setError('');
+      setRemovingMemberId(null);
     }
   }, [isOpen, team]);
 
@@ -65,6 +67,8 @@ const TeamMembersModal = ({ isOpen, onClose, team, onTeamUpdated }) => {
   };
 
   const handleUserSelect = (userId) => {
+    if (isSubmitting) return;
+
     setSelectedUsers(prev => {
       if (prev.includes(userId)) {
         return prev.filter(id => id !== userId);
@@ -75,7 +79,7 @@ const TeamMembersModal = ({ isOpen, onClose, team, onTeamUpdated }) => {
   };
 
   const handleAddMembers = async () => {
-    if (selectedUsers.length === 0) return;
+    if (selectedUsers.length === 0 || isSubmitting) return;
 
     setIsSubmitting(true);
     setError('');
@@ -114,6 +118,9 @@ const TeamMembersModal = ({ isOpen, onClose, team, onTeamUpdated }) => {
   };
 
   const handleRemoveMember = async (memberId) => {
+    if (isSubmitting || removingMemberId) return;
+
+    setRemovingMemberId(memberId);
     setIsSubmitting(true);
     setError('');
 
@@ -143,27 +150,37 @@ const TeamMembersModal = ({ isOpen, onClose, team, onTeamUpdated }) => {
       setError(t("failedToRemoveMember"));
     } finally {
       setIsSubmitting(false);
+      setRemovingMemberId(null);
     }
   };
 
   return (
     <Modal
       isOpen={isOpen}
-      onRequestClose={onClose}
+      onRequestClose={!isSubmitting ? onClose : undefined}
       contentLabel={t("teamMembers")}
       className={`team-members-modal-content ${theme}`}
       overlayClassName="team-members-modal-overlay"
     >
       <div className="team-members-modal-header">
         <h2>{team ? `${team.name} - ${t("teamMembers")}` : t("teamMembers")}</h2>
-        <button className="team-members-modal-close" onClick={onClose}>&times;</button>
+        <button
+          className="team-members-modal-close"
+          onClick={onClose}
+          disabled={isSubmitting}
+        >
+          &times;
+        </button>
       </div>
 
       <div className="team-members-modal-body">
         {error && <div className="team-members-modal-error">{error}</div>}
 
         {isLoading ? (
-          <div className="team-members-modal-loading">{t("loadingTeamData")}</div>
+          <div className="team-members-modal-loading">
+            <div className="team-members-spinner"></div>
+            <p>{t("loadingTeamData")}</p>
+          </div>
         ) : (
           <>
             <div className="team-members-section">
@@ -179,10 +196,14 @@ const TeamMembersModal = ({ isOpen, onClose, team, onTeamUpdated }) => {
                       <button
                         className="team-member-remove-btn"
                         onClick={() => handleRemoveMember(member._id)}
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || removingMemberId !== null}
                         title={t("delete")}
                       >
-                        <i className="fas fa-times"></i>
+                        {removingMemberId === member._id ? (
+                          <div className="button-spinner-small"></div>
+                        ) : (
+                          <i className="fas fa-times"></i>
+                        )}
                       </button>
                     </div>
                   ))}
@@ -200,7 +221,7 @@ const TeamMembersModal = ({ isOpen, onClose, team, onTeamUpdated }) => {
                     {availableUsers.map(user => (
                       <div
                         key={user._id}
-                        className={`team-available-user-item ${selectedUsers.includes(user._id) ? 'team-selected' : ''}`}
+                        className={`team-available-user-item ${selectedUsers.includes(user._id) ? 'team-selected' : ''} ${isSubmitting ? 'team-disabled' : ''}`}
                         onClick={() => handleUserSelect(user._id)}
                       >
                         <div className="team-modal-user-info">
@@ -221,7 +242,11 @@ const TeamMembersModal = ({ isOpen, onClose, team, onTeamUpdated }) => {
                       onClick={handleAddMembers}
                       disabled={isSubmitting || selectedUsers.length === 0}
                     >
-                      {t("addSelected")} ({selectedUsers.length})
+                      {isSubmitting ? (
+                        <><span className="button-spinner"></span> {t("adding")}</>
+                      ) : (
+                        <>{t("addSelected")} ({selectedUsers.length})</>
+                      )}
                     </button>
                   </div>
                 </>
@@ -234,7 +259,13 @@ const TeamMembersModal = ({ isOpen, onClose, team, onTeamUpdated }) => {
       </div>
 
       <div className="team-members-modal-footer">
-        <button className="team-members-modal-close-btn" onClick={onClose}>{t("close")}</button>
+        <button
+          className="team-members-modal-close-btn"
+          onClick={onClose}
+          disabled={isSubmitting}
+        >
+          {t("close")}
+        </button>
       </div>
     </Modal>
   );

@@ -350,3 +350,58 @@
 [data-theme="dark"] .confirm-delete-btn:hover {
   background-color: #c53030;
 }
+
+.team-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 200px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e9ecef;
+  padding: 30px;
+  text-align: center;
+}
+
+.team-loading p {
+  font-size: 14px;
+  color: #495057;
+  margin-top: 16px;
+}
+
+.team-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(52, 152, 219, 0.2);
+  border-top-color: #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Dark theme */
+[data-theme="dark"] .team-loading {
+  background: rgba(26, 26, 46, 0.8);
+  border-color: #2d3436;
+}
+
+[data-theme="dark"] .team-loading p {
+  color: #dfe6e9;
+}
+
+[data-theme="dark"] .team-loading-spinner {
+  border-color: rgba(116, 185, 255, 0.2);
+  border-top-color: #74b9ff;
+}

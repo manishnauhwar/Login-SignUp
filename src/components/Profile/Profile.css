@@ -71,7 +71,7 @@
   background: #0984e3;
 }
 
-.profile-img-modal {
+.profile-img-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -84,16 +84,19 @@
   z-index: 1000;
 }
 
-.profile-img-modal-content {
+.profile-img-modal {
   background: white;
-  padding: 20px;
-  border-radius: 10px;
+  padding: 25px;
+  border-radius: 12px;
   width: 90%;
-  max-width: 400px;
+  max-width: 350px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-[data-theme="dark"] .profile-img-modal-content {
+[data-theme="dark"] .profile-img-modal {
   background: #2d3436;
   color: #fff;
 }
@@ -124,54 +127,73 @@
   border-radius: 5px;
   cursor: pointer;
   display: block;
-  margin: 10px auto;
+  margin: 15px auto;
   transition: all 0.3s;
+  font-weight: 600;
+  width: 100%;
 }
 
 .profile-img-upload-btn:hover {
   background: #0056b3;
+  transform: translateY(-1px);
 }
 
 [data-theme="dark"] .profile-img-upload-btn {
-  background: #74b9ff;
-}
-
-[data-theme="dark"] .profile-img-upload-btn:hover {
   background: #0984e3;
 }
 
-.profile-img-modal-actions {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-top: 15px;
+[data-theme="dark"] .profile-img-upload-btn:hover {
+  background: #0069d9;
 }
 
-.profile-img-save-btn,
-.profile-img-cancel-btn {
-  padding: 8px 20px;
-  border-radius: 5px;
+.save-img-btn,
+.cancel-img-btn {
+  margin-top: 15px;
+  padding: 10px 20px;
+  border-radius: 6px;
   cursor: pointer;
   border: none;
   transition: all 0.3s;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
 }
 
-.profile-img-save-btn {
+.save-img-btn {
   background: #28a745;
   color: white;
+  margin-bottom: 10px;
 }
 
-.profile-img-save-btn:hover {
+.save-img-btn:hover {
   background: #218838;
 }
 
-.profile-img-cancel-btn {
+.cancel-img-btn {
   background: #dc3545;
   color: white;
 }
 
-.profile-img-cancel-btn:hover {
+.cancel-img-btn:hover {
   background: #c82333;
+}
+
+[data-theme="dark"] .save-img-btn {
+  background: #2ecc71;
+}
+
+[data-theme="dark"] .save-img-btn:hover {
+  background: #27ae60;
+}
+
+[data-theme="dark"] .cancel-img-btn {
+  background: #e74c3c;
+}
+
+[data-theme="dark"] .cancel-img-btn:hover {
+  background: #c0392b;
 }
 
 .profile-info p {
@@ -201,7 +223,8 @@
   box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
 }
 
-.profile-btn-edit {
+.profile-btn-edit,
+.edit-profile-btn {
   background: linear-gradient(135deg, #007bff, #0056b3);
   color: #fff;
   border: none;
@@ -212,12 +235,28 @@
   margin-top: 15px;
   transition: all 0.3s ease;
   width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
-.profile-btn-edit:hover {
+.profile-btn-edit:hover,
+.edit-profile-btn:hover {
   background: linear-gradient(135deg, #0056b3, #003f80);
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Dark theme styles for both button classes */
+[data-theme="dark"] .profile-btn-edit,
+[data-theme="dark"] .edit-profile-btn {
+  background: linear-gradient(135deg, #74b9ff, #0984e3);
+}
+
+[data-theme="dark"] .profile-btn-edit:hover,
+[data-theme="dark"] .edit-profile-btn:hover {
+  background: linear-gradient(135deg, #0984e3, #0069d9);
 }
 
 .task-stats {
@@ -642,14 +681,6 @@ input:focus {
   box-shadow: 0 0 0 2px rgba(116, 185, 255, 0.25);
 }
 
-[data-theme="dark"] .profile-btn-edit {
-  background: linear-gradient(135deg, #74b9ff, #0984e3);
-}
-
-[data-theme="dark"] .profile-btn-edit:hover {
-  background: linear-gradient(135deg, #0984e3, #0069d9);
-}
-
 [data-theme="dark"] .task-stats {
   background: linear-gradient(135deg, #2d3436 0%, #353b48 100%);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
@@ -778,4 +809,145 @@ input:focus {
 .admin-profile-content .profile-info,
 .manager-profile-content .profile-info {
   width: 300px;
+}
+
+/* Loading Spinners and States */
+.profile-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  padding: 30px;
+  text-align: center;
+}
+
+.profile-loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(52, 152, 219, 0.2);
+  border-top-color: #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.button-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-right: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.button-spinner-small {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.profile-error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  text-align: center;
+}
+
+.profile-error-message {
+  color: #e74c3c;
+  margin-bottom: 20px;
+}
+
+.profile-retry-button {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.profile-retry-button:hover {
+  background-color: #2980b9;
+}
+
+/* Button states */
+button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.refresh-data-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s;
+  z-index: 100;
+}
+
+.refresh-data-btn:hover {
+  background-color: #2980b9;
+  transform: rotate(30deg);
+}
+
+.refresh-data-btn i {
+  font-size: 20px;
+}
+
+.refresh-data-btn span {
+  display: none;
+}
+
+/* Dark theme for loading states */
+[data-theme="dark"] .profile-loading-spinner {
+  border-color: rgba(116, 185, 255, 0.2);
+  border-top-color: #74b9ff;
+}
+
+[data-theme="dark"] .button-spinner,
+[data-theme="dark"] .button-spinner-small {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .profile-error-message {
+  color: #ff6b6b;
+}
+
+[data-theme="dark"] .refresh-data-btn {
+  background-color: #4b6cb7;
+}
+
+[data-theme="dark"] .refresh-data-btn:hover {
+  background-color: #3a5a99;
 }

@@ -197,10 +197,46 @@
 
 .team-members-modal-loading {
   display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  padding: 30px;
-  font-style: italic;
-  color: #6c757d;
+  min-height: 150px;
+  padding: 20px;
+  text-align: center;
+}
+
+.team-members-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(52, 152, 219, 0.2);
+  border-top-color: #3498db;
+  border-radius: 50%;
+  animation: spin-modal 1s linear infinite;
+}
+
+@keyframes spin-modal {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.team-members-modal-loading p {
+  margin-top: 15px;
+  color: #4a5568;
+}
+
+.team-disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .no-members-message,
@@ -333,4 +369,14 @@
 
 [data-theme="dark"] .team-members-modal-close-btn:hover {
   background-color: #7f8c8d;
+}
+
+/* Dark theme for loading states */
+[data-theme="dark"] .team-members-spinner {
+  border-color: rgba(116, 185, 255, 0.2);
+  border-top-color: #74b9ff;
+}
+
+[data-theme="dark"] .team-members-modal-loading p {
+  color: #a0aec0;
 }

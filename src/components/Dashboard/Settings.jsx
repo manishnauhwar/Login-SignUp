@@ -5,7 +5,6 @@ import Sidebar from "../sidebar/Sidebar";
 import Navbar from "../Navbar/Navbar";
 import { useNavigate } from "react-router-dom";
 import Main from "../Title/Main";
-import { ThemeContext } from "../../utils/ThemeContext";
 import { LanguageContext } from "../../utils/LanguageContext";
 import { useNotifications } from "../../utils/NotificationContext";
 import axiosInstance from "../../utils/axiosInstance";
@@ -31,7 +30,6 @@ const languages = {
 };
 
 const Settings = () => {
-  const { theme, toggleTheme } = useContext(ThemeContext);
   const { language, changeLanguage, translate, translations } = useContext(LanguageContext);
   const { t } = useTranslation();
   const { fetchNotifications } = useNotifications();
@@ -145,7 +143,7 @@ const Settings = () => {
   );
 
   return (
-    <div className="home-container" data-theme={theme}>
+    <div className="home-container">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
       <div className={`main-content ${isSidebarOpen ? "sidebar-open" : "sidebar-closed"}`}>
         <Navbar handleLogout={handleLogout} isSidebarOpen={isSidebarOpen} />
@@ -208,10 +206,6 @@ const Settings = () => {
                   </span>
                 ))}
               </div>
-            </div>
-            <div className="settings-item">
-              <label>{t("theme")}</label>
-              <div className={`toggle-switch ${theme === "dark" ? "active" : ""}`} onClick={toggleTheme}></div>
             </div>
           </div>
         </div>

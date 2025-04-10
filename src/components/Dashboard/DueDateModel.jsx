@@ -26,6 +26,12 @@ const DueDateModel = ({ tasks = [], setTasks, searchQuery, userId, userRole }) =
   });
   const [teamMembers, setTeamMembers] = useState([]);
   const [toasts, setToasts] = useState([]);
+  const [isAddingTask, setIsAddingTask] = useState(false);
+  const [isSavingTask, setIsSavingTask] = useState(false);
+  const [isDeletingTask, setIsDeletingTask] = useState(false);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [tasksPerPage] = useState(5);
 
   const addToast = (message, type = "info") => {
     const id = Date.now();
@@ -108,6 +114,7 @@ const DueDateModel = ({ tasks = [], setTasks, searchQuery, userId, userRole }) =
     if (!formData.title || !formData.dueDate || !formData.description) return;
 
     try {
+      setIsAddingTask(true);
       const taskData = {
         ...formData,
         assignedTo: userId,
@@ -131,6 +138,8 @@ const DueDateModel = ({ tasks = [], setTasks, searchQuery, userId, userRole }) =
       console.error("Error adding task:", error);
       console.error("Error details:", error.response?.data || error.message);
       addToast(translate("errorAddingTask") || "Error adding task", "error");
+    } finally {
+      setIsAddingTask(false);
     }
   };
 
@@ -154,17 +163,29 @@ const DueDateModel = ({ tasks = [], setTasks, searchQuery, userId, userRole }) =
 
   const handleDelete = async (taskId) => {
     try {
+      setIsDeletingTask(true);
       await axiosInstance.delete(`/tasks/${taskId}`);
       refreshTasks();
       addToast(translate("taskDeletedSuccessfully") || "Task deleted successfully", "success");
     } catch (error) {
       console.error("Error deleting task:", error);
-      addToast(translate("errorDeletingTask") || "Error deleting task", "error");
+      let errorMessage = translate("errorDeletingTask") || "Error deleting task";
+
+      if (error.response?.status === 403) {
+        errorMessage = translate("notAuthorizedToDelete") || "You are not authorized to delete this task";
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+
+      addToast(errorMessage, "error");
+    } finally {
+      setIsDeletingTask(false);
     }
   };
 
   const handleSave = async () => {
     try {
+      setIsSavingTask(true);
       const taskToUpdate = { ...modalState.editedTask };
 
       if (taskToUpdate.originalStatus) {
@@ -184,6 +205,8 @@ const DueDateModel = ({ tasks = [], setTasks, searchQuery, userId, userRole }) =
     } catch (error) {
       console.error("Error updating task:", error);
       addToast(translate("errorUpdatingTask") || "Error updating task", "error");
+    } finally {
+      setIsSavingTask(false);
     }
   };
 
@@ -214,11 +237,50 @@ const DueDateModel = ({ tasks = [], setTasks, searchQuery, userId, userRole }) =
   };
 
   const safeTasks = translatedTasks || [];
-  const isDisabled = !formData.title || !formData.dueDate || !formData.description;
+  const isDisabled = !formData.title || !formData.dueDate || !formData.description || isAddingTask;
 
   const filteredTasks = safeTasks.filter((task) =>
     task.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const indexOfLastTask = currentPage * tasksPerPage;
+  const indexOfFirstTask = indexOfLastTask - tasksPerPage;
+  const currentTasks = [...filteredTasks].reverse().slice(indexOfFirstTask, indexOfLastTask);
+
+  const emptyRows = [];
+  const rowsToAdd = tasksPerPage - currentTasks.length;
+
+  if (rowsToAdd > 0 && currentTasks.length > 0) {
+    for (let i = 0; i < rowsToAdd; i++) {
+      emptyRows.push(
+        <tr key={`empty-${i}`} className="empty-row">
+          <td colSpan="7">&nbsp;</td>
+        </tr>
+      );
+    }
+  }
+
+  const totalPages = Math.max(1, Math.ceil(filteredTasks.length / tasksPerPage));
+
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages);
+    }
+  }, [filteredTasks.length, totalPages]);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  const nextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const prevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
   return (
     <div className="task-manager-container" data-theme={theme}>
@@ -241,7 +303,7 @@ const DueDateModel = ({ tasks = [], setTasks, searchQuery, userId, userRole }) =
           <option value="High">{translate("priorities.High")}</option>
         </select>
         <button className={`task-button ${isDisabled ? "disabled" : ""}`} onClick={handleAddTask} disabled={isDisabled}>
-          {translate("addTask")}
+          {isAddingTask ? (translate("adding") || "Adding...") : (translate("addTask") || "Add Task")}
         </button>
       </div>
       <div className="table-box">
@@ -254,37 +316,75 @@ const DueDateModel = ({ tasks = [], setTasks, searchQuery, userId, userRole }) =
               <th>{t('priority')}</th>
               <th>{t('status')}</th>
               <th>{t('actions')}</th>
-              <th>{t('status')}</th>
+              <th>{t('Complete')}</th>
             </tr>
           </thead>
           <tbody>
-            {[...filteredTasks].reverse().map((task) => (
-              <tr key={task.id} onClick={() => handleView(task)} style={{ cursor: "pointer" }}>
-                <td>{task.title}</td>
-                <td>{task.createdAt}</td>
-                <td>{task.dueDate}</td>
-                <td>{task.priority}</td>
-                <td>{task.status}</td>
-                <td className="action-buttons">
-                  <button onClick={(e) => { e.stopPropagation(); handleEdit(task); }} className="edit-btn">
-                    {t('update')}
-                  </button>
-                  {(userRole === "admin" || userRole === "manager") && (
-                    <button onClick={(e) => { e.stopPropagation(); handleDelete(task.id); }} className="delete-btn">
-                      {t('delete')}
-                    </button>
-                  )}
-                </td>
-                <td>
-                  <div className={`custom-toggle ${task.status === translate("statuses.Completed") || task.status === "Completed" ? "completed" : "pending"}`} onClick={(e) => { e.stopPropagation(); handleToggleStatus(task.id, task.status); }}>
-                    <div className="toggle-circle"></div>
-                  </div>
-                </td>
+            {currentTasks.length > 0 ? (
+              <>
+                {currentTasks.map((task) => (
+                  <tr key={task.id} onClick={() => handleView(task)} style={{ cursor: "pointer" }}>
+                    <td>{task.title}</td>
+                    <td>{task.createdAt}</td>
+                    <td>{task.dueDate}</td>
+                    <td>{task.priority}</td>
+                    <td>{task.status}</td>
+                    <td className="action-buttons">
+                      <button onClick={(e) => { e.stopPropagation(); handleEdit(task); }} className="edit-btn">
+                        {t('update')}
+                      </button>
+                      {(userRole === "admin" || userRole === "manager" || task.userId === userId) && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!isDeletingTask) handleDelete(task.id);
+                          }}
+                          className="delete-btn"
+                          disabled={isDeletingTask}
+                        >
+                          {isDeletingTask ? t('deleting') || 'Deleting...' : t('delete') || 'Delete'}
+                        </button>
+                      )}
+                    </td>
+                    <td>
+                      <div className={`custom-toggle ${task.status === translate("statuses.Completed") || task.status === "Completed" ? "completed" : "pending"}`} onClick={(e) => { e.stopPropagation(); handleToggleStatus(task.id, task.status); }}>
+                        <div className="toggle-circle"></div>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {emptyRows}
+              </>
+            ) : (
+              <tr className="no-tasks-row">
+                <td colSpan="7" className="no-tasks-message">{t('noTasksAvailable') || 'No tasks available'}</td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
+
+        <div className="pagination-container">
+          <button
+            onClick={prevPage}
+            disabled={currentPage === 1}
+            className="pagination-button"
+          >
+            {t('previous') || 'Previous'}
+          </button>
+          <div className="pagination-info">
+            {t('page') || 'Page'} {currentPage} {t('of') || 'of'} {totalPages}
+            {filteredTasks.length > 0 && ` (${filteredTasks.length} ${t('tasks') || 'tasks'})`}
+          </div>
+          <button
+            onClick={nextPage}
+            disabled={currentPage === totalPages || totalPages === 0}
+            className="pagination-button"
+          >
+            {t('next') || 'Next'}
+          </button>
+        </div>
       </div>
+
       <Modal isOpen={modalState.isOpen} onRequestClose={() => setModalState((prev) => ({ ...prev, isOpen: false }))} contentLabel="Task Details" overlayClassName="modal-overlay" className="modal-content" ariaHideApp={false}>
         <button className="modal-close-btn" onClick={() => setModalState((prev) => ({ ...prev, isOpen: false }))}>
           ×
@@ -311,8 +411,8 @@ const DueDateModel = ({ tasks = [], setTasks, searchQuery, userId, userRole }) =
                 onChange={(e) => setModalState((prev) => ({ ...prev, editedTask: { ...prev.editedTask, description: e.target.value } }))}
               />
               <input type="date" value={modalState.editedTask.dueDate} onChange={(e) => setModalState((prev) => ({ ...prev, editedTask: { ...prev.editedTask, dueDate: e.target.value } }))} />
-              <button onClick={handleSave} className="save-btn">
-                {t('saveChanges')}
+              <button onClick={handleSave} className="save-btn" disabled={isSavingTask}>
+                {isSavingTask ? (t('saving') || 'Saving...') : (t('saveChanges') || 'Save Changes')}
               </button>
             </div>
           ) : (

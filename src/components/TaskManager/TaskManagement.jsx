@@ -131,19 +131,17 @@ const TaskManagement = () => {
           <div className="sort-filter-container">
             <SortTasks tasks={tasks} setTasks={setTasks} fullData={allTasks} setFullData={setAllTasks} />
           </div>
-          <div className="data-table">
-            {loading ? (
-              <p>{translate("loadingTasks")}</p>
-            ) : (
-              <DueDateTableWithModal
-                tasks={tasks}
-                setTasks={setTasks}
-                searchQuery={searchQuery}
-                userId={user?._id || user?.id}
-                userRole={user?.role}
-              />
-            )}
-          </div>
+          {loading ? (
+            <p>{translate("loadingTasks")}</p>
+          ) : (
+            <DueDateTableWithModal
+              tasks={tasks}
+              setTasks={setTasks}
+              searchQuery={searchQuery}
+              userId={user?._id || user?.id}
+              userRole={user?.role}
+            />
+          )}
         </div>
       </div>
     </div>

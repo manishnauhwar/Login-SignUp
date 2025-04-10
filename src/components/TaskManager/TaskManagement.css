@@ -30,26 +30,8 @@ body {
   margin-bottom: 20px; */
 }
 
-.data-table {
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-  padding: 20px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-[data-theme="dark"] .data-table {
-  background: #2c2c2c;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-[data-theme="dark"] .sort-filter-container {
-  background: #2c2c2c;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-}
-
+/* If the .data-table class exists, replace it with this comment */
+/* Table styling is now handled directly in DueDateModel.css */
 
 @media (max-width: 768px) {
   .main-content {

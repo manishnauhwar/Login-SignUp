@@ -4,10 +4,12 @@ import { ThemeContext } from "../../utils/ThemeContext";
 import axiosInstance from "../../utils/axiosInstance";
 import "./UserModal.css";
 import { useTranslation } from "react-i18next";
+import { useNotifications } from "../../utils/NotificationContext";
 
 const UserModal = ({ isOpen, onClose, onUserSaved, user }) => {
   const { theme } = useContext(ThemeContext);
   const { t } = useTranslation();
+  const { createNotification } = useNotifications();
   const [formData, setFormData] = useState({
     fullname: "",
     email: "",
@@ -17,6 +19,13 @@ const UserModal = ({ isOpen, onClose, onUserSaved, user }) => {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditMode = !!user;
+
+  const addToast = (message, type = "info") => {
+    const event = new CustomEvent('toast-message', {
+      detail: { message, type }
+    });
+    window.dispatchEvent(event);
+  };
 
   useEffect(() => {
     if (isOpen && user) {
@@ -102,14 +111,41 @@ const UserModal = ({ isOpen, onClose, onUserSaved, user }) => {
       }
 
       if (response.status === 200 || response.status === 201) {
-
         const userData = response.data.user || response.data;
+
+        // Display success toast message
+        if (isEditMode) {
+          addToast(`User ${userData.fullname} updated successfully`, "success");
+        } else {
+          addToast(`User ${userData.fullname} added successfully`, "success");
+        }
+
+        // Notify admin about the action
+        try {
+          const currentUser = JSON.parse(localStorage.getItem('user'));
+          if (currentUser) {
+            const userId = currentUser._id || currentUser.id;
+            await createNotification({
+              type: isEditMode ? 'user_updated' : 'user_created',
+              title: isEditMode ? 'User Updated' : 'User Created',
+              message: isEditMode
+                ? `User ${userData.fullname} has been updated`
+                : `User ${userData.fullname} has been created`,
+              recipient: userId,
+              sender: userId
+            });
+          }
+        } catch (notifError) {
+          console.error("Error creating notification:", notifError);
+        }
+
         onUserSaved(userData);
         onClose();
       }
     } catch (error) {
       console.error("Error saving user:", error);
       setError(error.response?.data?.message || t("failedToSaveUser"));
+      addToast(error.response?.data?.message || t("failedToSaveUser"), "error");
     } finally {
       setIsSubmitting(false);
     }

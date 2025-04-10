@@ -31,7 +31,7 @@ export const NotificationProvider = ({ children }) => {
   useEffect(() => {
     if (isAuthenticated()) {
       const user = getUser();
-      const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+      const BACKEND_URL = import.meta.env.VITE_PRO_URL || "http://localhost:5000";
 
       const newSocket = io(BACKEND_URL);
       setSocket(newSocket);
@@ -42,7 +42,7 @@ export const NotificationProvider = ({ children }) => {
 
       newSocket.on('notification', (notification) => {
         const inAppEnabled = JSON.parse(localStorage.getItem("inAppNotifications"));
-        if (inAppEnabled !== false) { 
+        if (inAppEnabled !== false) {
           setNotifications(prev => [notification, ...prev]);
 
           addToast(notification);
