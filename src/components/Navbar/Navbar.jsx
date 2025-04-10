@@ -84,7 +84,7 @@ const Navbar = ({ handleLogout, isSidebarOpen, searchQuery, setSearchQuery }) =>
             {unreadCount > 0 && <span className="notification-count">{unreadCount}</span>}
           </button>
           {isDropdownOpen && (
-            <div className="notification-dropdown">
+            <div className="notification-dropdown" data-theme={theme}>
               {notifications.length === 0 ? (
                 <p className="no-notifications">No notifications</p>
               ) : (
