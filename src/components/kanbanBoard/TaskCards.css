@@ -120,3 +120,46 @@
 [data-theme="dark"] .task-cards .due-date {
   color: #ff6b6b;
 }
+
+/* Add loading state for task cards */
+.task-cards.loading {
+  position: relative;
+  pointer-events: none;
+}
+
+.task-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  border-radius: 8px;
+}
+
+[data-theme="dark"] .task-loading-overlay {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.task-loading-spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid transparent;
+  border-top-color: #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}

@@ -31,6 +31,10 @@ const Teams = () => {
   const [isViewMembersModalOpen, setIsViewMembersModalOpen] = useState(false);
   const [toasts, setToasts] = useState([]);
   const { t } = useTranslation();
+  const [isAssigningTask, setIsAssigningTask] = useState(false);
+  const [assigningTaskId, setAssigningTaskId] = useState(null);
+  const [isDeletingTeam, setIsDeletingTeam] = useState(false);
+  const [isLoadingTeams, setIsLoadingTeams] = useState(true);
 
   const addToast = (message, type = "info") => {
     const id = Date.now();
@@ -47,6 +51,7 @@ const Teams = () => {
 
   useEffect(() => {
     const fetchTeams = async () => {
+      setIsLoadingTeams(true);
       try {
         const response = await axiosInstance.get("/teams");
         setTeams(response.data);
@@ -64,6 +69,8 @@ const Teams = () => {
 
           addToast("Failed to fetch teams", "error");
         }
+      } finally {
+        setIsLoadingTeams(false);
       }
     };
 
@@ -158,6 +165,7 @@ const Teams = () => {
     if (!confirmDelete.teamId) return;
 
     try {
+      setIsDeletingTeam(true);
       await axiosInstance.delete(`/teams/${confirmDelete.teamId}`);
 
       setTeams(prevTeams => prevTeams.filter(team => team._id !== confirmDelete.teamId));
@@ -195,6 +203,7 @@ const Teams = () => {
         addToast("Failed to delete team", "error");
       }
     } finally {
+      setIsDeletingTeam(false);
       setConfirmDelete({ show: false, teamId: null });
     }
   };
@@ -228,6 +237,9 @@ const Teams = () => {
 
   const handleAssignTask = async (taskId, teamId) => {
     try {
+      setIsAssigningTask(true);
+      setAssigningTaskId(taskId);
+
       const assignedTeam = teams.find((team) => team._id === teamId);
       if (!assignedTeam) {
         console.error('Team not found:', teamId);
@@ -267,17 +279,48 @@ const Teams = () => {
 
         const userRole = currentUser.role;
         const userId = currentUser._id || currentUser.id;
-        const message = userRole === 'admin'
+        const messageForManager = userRole === 'admin'
           ? `Admin has assigned you a new task: "${response.data.title}"`
           : `${currentUser.fullname} has assigned you a new task: "${response.data.title}"`;
 
         await createNotification({
           type: 'task_assigned',
           title: 'New Task Assignment',
-          message: message,
+          message: messageForManager,
           recipient: managerId,
           sender: userId
         });
+
+        if (assignedTeam.members && assignedTeam.members.length > 0) {
+          console.log(`Sending notifications to ${assignedTeam.members.length} team members`);
+
+          const messageForMembers = `A new task "${response.data.title}" has been assigned to your team "${assignedTeam.name}"`;
+
+          for (const member of assignedTeam.members) {
+            if ((member._id || member.id) !== managerId) {
+              const memberId = member._id || member.id;
+              console.log(`Sending notification to team member: ${memberId}`);
+
+              try {
+                await new Promise(resolve => setTimeout(resolve, 100));
+
+                await createNotification({
+                  type: 'task_assigned',
+                  title: 'New Team Task',
+                  message: messageForMembers,
+                  recipient: memberId,
+                  sender: userId
+                });
+
+                console.log(`Notification sent successfully to member ${memberId}`);
+              } catch (notifError) {
+                console.error(`Failed to send notification to member ${memberId}:`, notifError);
+              }
+            }
+          }
+        } else {
+          console.log("No team members to notify");
+        }
 
         addToast(`Task "${response.data.title}" assigned to ${assignedTeam.name}`, "success");
       }
@@ -295,6 +338,9 @@ const Teams = () => {
 
         addToast("Failed to assign task", "error");
       }
+    } finally {
+      setIsAssigningTask(false);
+      setAssigningTaskId(null);
     }
   };
 
@@ -338,6 +384,7 @@ const Teams = () => {
                 <button
                   className="create-team-btn"
                   onClick={handleOpenCreateModal}
+                  disabled={isLoadingTeams}
                 >
                   + {t("createTeam")}
                 </button>
@@ -345,7 +392,12 @@ const Teams = () => {
             </div>
             <div className="teams-list-wrapper">
               <div className="teams-cards-container">
-                {teams.length > 0 ? (
+                {isLoadingTeams ? (
+                  <div className="team-loading">
+                    <div className="team-loading-spinner"></div>
+                    <p>{t("loadingTeams") || "Loading teams..."}</p>
+                  </div>
+                ) : teams.length > 0 ? (
                   teams.map((team) => (
                     <TeamCard
                       key={team._id}
@@ -356,6 +408,10 @@ const Teams = () => {
                       onViewMembers={handleViewMembers}
                       isAdmin={isAdmin}
                       isManager={currentUser?.role === 'manager'}
+                      isAssigningTask={isAssigningTask}
+                      assigningTaskId={assigningTaskId}
+                      isDeletingTeam={isDeletingTeam}
+                      isLoadingTeams={isLoadingTeams}
                     />
                   ))
                 ) : (

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../utils/axiosInstance";
@@ -9,14 +9,14 @@ import "../../App.css";
 const GoogleAuth = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSuccess = async (response) => {
     try {
-      console.log("Google OAuth response received");
+      setIsLoading(true);
       const res = await axiosInstance.post("/", {
         token: response.credential
       });
-
 
       if (res.data.success && res.data.user && res.data.user.token) {
         setAuthData(res.data.user.token, res.data.user);
@@ -27,6 +27,8 @@ const GoogleAuth = () => {
     } catch (error) {
       console.error("Google authentication error:", error);
       alert("Authentication failed! Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -40,16 +42,16 @@ const GoogleAuth = () => {
         <GoogleLogin
           onSuccess={handleSuccess}
           onError={handleError}
-          useOneTap={false}
+          useOneTap={true}
           flow="implicit"
           popup={true}
           render={(renderProps) => (
             <button
               onClick={renderProps.onClick}
-              disabled={renderProps.disabled}
+              disabled={renderProps.disabled || isLoading}
               className="custom-google-button"
             >
-              {t("signInWithGoogle")}
+              {isLoading ? t("loading") : t("signInWithGoogle")}
             </button>
           )}
         />

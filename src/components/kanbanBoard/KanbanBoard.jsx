@@ -40,6 +40,11 @@ const KanbanBoard = () => {
   const [filterDate, setFilterDate] = useState("");
   const [toasts, setToasts] = useState([]);
 
+  // Loading states
+  const [isAddingTask, setIsAddingTask] = useState(false);
+  const [isMovingTask, setIsMovingTask] = useState(false);
+  const [movingTaskId, setMovingTaskId] = useState(null);
+
   const addToast = (message, type = "info") => {
     const id = Date.now();
     setToasts(prev => [...prev, { id, message, type }]);
@@ -146,6 +151,9 @@ const KanbanBoard = () => {
 
   const moveTask = async (taskId, newStatus) => {
     try {
+      setIsMovingTask(true);
+      setMovingTaskId(taskId);
+
       const task = tasks.find(task => task._id === taskId);
       if (!task) {
         console.error("Task not found");
@@ -172,24 +180,33 @@ const KanbanBoard = () => {
         localStorage.removeItem('user');
         navigate('/login');
       }
+    } finally {
+      setIsMovingTask(false);
+      setMovingTaskId(null);
     }
   };
 
   const addTask = async () => {
-    const userData = JSON.parse(localStorage.getItem("user"));
-    const userId = userData._id || userData.id;
-    const taskData = {
-      title: newTaskData.title.trim(),
-      description: newTaskData.description.trim() || "No description provided",
-      dueDate: newTaskData.dueDate,
-      priority: newTaskData.priority,
-      status: "To Do",
-      createdAt: new Date().toISOString(),
-      assignedTo: userRole === "user" ? userId : newTaskData.assignedTo || userId,
-      userId: userId
-    };
+    if (!newTaskData.title.trim() || !newTaskData.dueDate) {
+      addToast("Please fill in the required fields", "error");
+      return;
+    }
 
     try {
+      setIsAddingTask(true);
+      const userData = JSON.parse(localStorage.getItem("user"));
+      const userId = userData._id || userData.id;
+      const taskData = {
+        title: newTaskData.title.trim(),
+        description: newTaskData.description.trim() || "No description provided",
+        dueDate: newTaskData.dueDate,
+        priority: newTaskData.priority,
+        status: "To Do",
+        createdAt: new Date().toISOString(),
+        assignedTo: userRole === "user" ? userId : newTaskData.assignedTo || userId,
+        userId: userId
+      };
+
       const response = await axiosInstance.post("/tasks/post", taskData);
       if (response.data) {
         fetchTasks();
@@ -210,6 +227,8 @@ const KanbanBoard = () => {
     } catch (error) {
       console.error("Error adding task:", error);
       addToast(error.response?.data?.message || "Failed to add task", "error");
+    } finally {
+      setIsAddingTask(false);
     }
   };
 
@@ -229,7 +248,11 @@ const KanbanBoard = () => {
         <h3>{title}</h3>
         <div className="task-card-container">
           {filteredTasks.map((task) => (
-            <TaskCards key={task._id} task={task} />
+            <TaskCards
+              key={task._id}
+              task={task}
+              isMoving={isMovingTask && movingTaskId === task._id}
+            />
           ))}
         </div>
       </div>
@@ -250,9 +273,26 @@ const KanbanBoard = () => {
         <Main />
         <div className="kanban-content">
           <div className="view-toggle">
-            <button onClick={() => setView("kanban")}>{t('kanbanView')}</button>
-            <button onClick={() => setView("calendar")}>{t('calendarView')}</button>
-            <button className="add-task-btn" onClick={() => setShowModal(true)}>+ {t('addTask')}</button>
+            <button
+              onClick={() => setView("kanban")}
+              className={view === "kanban" ? "active" : ""}
+              disabled={view === "kanban"}
+            >
+              {t('kanbanView')}
+            </button>
+            <button
+              onClick={() => setView("calendar")}
+              className={view === "calendar" ? "active" : ""}
+              disabled={view === "calendar"}
+            >
+              {t('calendarView')}
+            </button>
+            <button
+              className="add-task-btn"
+              onClick={() => setShowModal(true)}
+            >
+              + {t('addTask')}
+            </button>
           </div>
           {view === "kanban" && (
             <>
@@ -269,16 +309,43 @@ const KanbanBoard = () => {
         )}
         {showModal && (
           <div className="modal">
-            <input type="text" placeholder={t('title')} value={newTaskData.title} onChange={(e) => setNewTaskData({ ...newTaskData, title: e.target.value })} />
-            <textarea placeholder={t('taskDescription')} value={newTaskData.description} onChange={(e) => setNewTaskData({ ...newTaskData, description: e.target.value })}></textarea>
-            <input type="date" value={newTaskData.dueDate} onChange={(e) => setNewTaskData({ ...newTaskData, dueDate: e.target.value })} />
-            <select value={newTaskData.priority} onChange={(e) => setNewTaskData({ ...newTaskData, priority: e.target.value })}>
+            <input
+              type="text"
+              placeholder={t('title')}
+              value={newTaskData.title}
+              onChange={(e) => setNewTaskData({ ...newTaskData, title: e.target.value })}
+            />
+            <textarea
+              placeholder={t('taskDescription')}
+              value={newTaskData.description}
+              onChange={(e) => setNewTaskData({ ...newTaskData, description: e.target.value })}
+            ></textarea>
+            <input
+              type="date"
+              value={newTaskData.dueDate}
+              onChange={(e) => setNewTaskData({ ...newTaskData, dueDate: e.target.value })}
+            />
+            <select
+              value={newTaskData.priority}
+              onChange={(e) => setNewTaskData({ ...newTaskData, priority: e.target.value })}
+            >
               <option value="Low">{t('priorities.Low')}</option>
               <option value="Medium">{t('priorities.Medium')}</option>
               <option value="High">{t('priorities.High')}</option>
             </select>
-            <button onClick={addTask}>{t('addTask')}</button>
-            <button onClick={() => setShowModal(false)}>{t('cancel', 'Cancel')}</button>
+            <button
+              onClick={addTask}
+              disabled={isAddingTask || !newTaskData.title.trim() || !newTaskData.dueDate}
+              className={isAddingTask ? "loading" : ""}
+            >
+              {isAddingTask ? t('adding') || "Adding..." : t('addTask')}
+            </button>
+            <button
+              onClick={() => setShowModal(false)}
+              disabled={isAddingTask}
+            >
+              {t('cancel', 'Cancel')}
+            </button>
           </div>
         )}
       </div>

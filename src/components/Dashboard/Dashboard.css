@@ -67,15 +67,8 @@ body {
   justify-content: center;
 }
 
-.data-table {
-  width: 100%;
-  padding: 20px;
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  margin: 20px 0 20px 0;
-  overflow-x: auto;
-}
+/* If the .data-table class exists, replace it with this comment */
+/* Table styling is now handled directly in DueDateModel.css */
 
 /* Dark theme support */
 [data-theme="dark"] .data-table {

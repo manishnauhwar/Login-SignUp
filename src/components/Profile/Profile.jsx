@@ -46,6 +46,11 @@ const UserProfile = () => {
   const [toasts, setToasts] = useState([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
+  const [isSavingUser, setIsSavingUser] = useState(false);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const [isLoadingTeams, setIsLoadingTeams] = useState(false);
+  const [isUploadingProfilePicture, setIsUploadingProfilePicture] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const addToast = (message, type = "info") => {
     const id = Date.now();
@@ -68,9 +73,13 @@ const UserProfile = () => {
   const getProfilePictureUrl = (relativePath) => {
     if (!relativePath) return profileImg;
 
-    if (relativePath.startsWith('data:')) return relativePath;
+    if (relativePath.startsWith('data:') || relativePath.startsWith('http')) {
+      return relativePath;
+    }
 
-    if (relativePath.startsWith('http')) return relativePath;
+    if (!relativePath.startsWith('/')) {
+      relativePath = '/' + relativePath;
+    }
 
     return getApiBaseUrl() + relativePath;
   };
@@ -113,15 +122,20 @@ const UserProfile = () => {
 
   const fetchAllUsers = async () => {
     try {
+      setIsLoadingUsers(true);
       const response = await axiosInstance.get('/users/alluser');
       setAllUsers(response.data.allUsers);
     } catch (err) {
       console.error('Error fetching all users:', err);
+      addToast(t('failedToLoadUsers') || 'Failed to load users', 'error');
+    } finally {
+      setIsLoadingUsers(false);
     }
   };
 
   const fetchTeamMembers = async (managerId) => {
     try {
+      setIsLoadingTeams(true);
       const response = await axiosInstance.get('/teams');
       const teams = response.data;
 
@@ -150,6 +164,9 @@ const UserProfile = () => {
       }
     } catch (err) {
       console.error('Error fetching team members:', err);
+      addToast(t('failedToLoadTeamMembers') || 'Failed to load team members', 'error');
+    } finally {
+      setIsLoadingTeams(false);
     }
   };
 
@@ -182,7 +199,6 @@ const UserProfile = () => {
           profilePicture: storedUser.profilePicture || null
         };
 
-        // Set profile picture preview if it exists
         if (cleanUserData.profilePicture) {
           setPreviewUrl(getProfilePictureUrl(cleanUserData.profilePicture));
         }
@@ -221,7 +237,15 @@ const UserProfile = () => {
       }
     };
 
+    // Listen for toast messages from UserModal
+    const handleToastMessage = (e) => {
+      if (e.detail && e.detail.message) {
+        addToast(e.detail.message, e.detail.type || 'info');
+      }
+    };
+
     window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('toast-message', handleToastMessage);
 
     window.dispatchEvent(new StorageEvent('storage', {
       key: 'profileRefresh',
@@ -230,6 +254,7 @@ const UserProfile = () => {
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('toast-message', handleToastMessage);
     };
   }, []);
 
@@ -241,6 +266,7 @@ const UserProfile = () => {
     if (!user) return;
 
     try {
+      setIsSavingUser(true);
       const userId = user._id;
       if (!userId) {
         console.error('User ID is missing:', user);
@@ -325,6 +351,8 @@ const UserProfile = () => {
         setError(err.response?.data?.message || "Failed to update user data. Please try again.");
         addToast(err.response?.data?.message || "Failed to update user data. Please try again.", "error");
       }
+    } finally {
+      setIsSavingUser(false);
     }
   };
 
@@ -339,7 +367,10 @@ const UserProfile = () => {
   };
 
   const confirmDeleteUser = async () => {
+    if (!userToDelete) return;
+
     try {
+      setIsLoadingUsers(true);
       await axiosInstance.delete(`/users/${userToDelete}`);
       fetchAllUsers();
       addToast("User deleted successfully", "success");
@@ -349,6 +380,7 @@ const UserProfile = () => {
     } finally {
       setShowDeleteModal(false);
       setUserToDelete(null);
+      setIsLoadingUsers(false);
     }
   };
 
@@ -369,10 +401,8 @@ const UserProfile = () => {
       setAllUsers(prevUsers => {
         const existing = prevUsers.find(u => u._id === userData._id);
         if (existing) {
-          addToast(`User ${userData.fullname} updated successfully`, "success");
           return prevUsers.map(u => u._id === userData._id ? userData : u);
         } else {
-          addToast(`User ${userData.fullname} added successfully`, "success");
           return [...prevUsers, userData];
         }
       });
@@ -440,6 +470,7 @@ const UserProfile = () => {
     if (!profilePicture || !user) return;
 
     try {
+      setIsUploadingProfilePicture(true);
       const formData = new FormData();
       formData.append('profilePicture', profilePicture);
 
@@ -460,17 +491,18 @@ const UserProfile = () => {
             profilePicture: response.data.profilePictureUrl
           });
 
-          // Update preview URL with the full URL
           setPreviewUrl(getProfilePictureUrl(response.data.profilePictureUrl));
         }
 
         setShowImgModal(false);
+        setProfilePicture(null);
         addToast("Profile picture updated successfully", "success");
       }
     } catch (error) {
       console.error("Error uploading profile picture:", error);
-      alert("Failed to upload profile picture. Please try again.");
       addToast("Failed to upload profile picture", "error");
+    } finally {
+      setIsUploadingProfilePicture(false);
     }
   };
 
@@ -478,6 +510,15 @@ const UserProfile = () => {
     setShowImgModal(false);
     setProfilePicture(null);
     setPreviewUrl(user?.profilePicture ? getProfilePictureUrl(user.profilePicture) : "");
+  };
+
+  const refreshData = () => {
+    setIsRefreshing(true);
+    setLastRefresh(Date.now());
+    addToast(t('refreshingData') || 'Refreshing data...', 'info');
+    setTimeout(() => {
+      setIsRefreshing(false);
+    }, 1000);
   };
 
   const renderRoleSpecificContent = () => {
@@ -677,15 +718,37 @@ const UserProfile = () => {
                     placeholder={t("newPassword")}
                     onChange={handleChange}
                   />
-                  <button className="profile-btn-edit" onClick={handleSave}>{t("save")}</button>
-                  <button className="profile-btn-cancel" onClick={() => setEditMode(false)}>{t("cancel")}</button>
+                  <button
+                    className="profile-btn-edit"
+                    onClick={handleSave}
+                    disabled={isSavingUser}
+                  >
+                    {isSavingUser ? (
+                      <><span className="button-spinner"></span> {t("saving")}</>
+                    ) : (
+                      t("saveChanges")
+                    )}
+                  </button>
+                  <button
+                    className="profile-btn-cancel"
+                    onClick={() => setEditMode(false)}
+                    disabled={isSavingUser}
+                  >
+                    {t("cancel")}
+                  </button>
                 </>
               ) : (
                 <>
                   <p><strong>{t("name")}:</strong> {user.fullname}</p>
                   <p><strong>{t("email")}:</strong> {user.email}</p>
                   <p><strong>{t("role")}:</strong> {user.role}</p>
-                  <button className="profile-btn-edit" onClick={handleEditClick}>{t("editProfile")}</button>
+                  <button
+                    className="edit-profile-btn"
+                    onClick={handleEditClick}
+                    disabled={isSavingUser}
+                  >
+                    <FaEdit /> {t("editProfile")}
+                  </button>
                 </>
               )}
             </div>
@@ -730,15 +793,37 @@ const UserProfile = () => {
                     placeholder={t("newPassword")}
                     onChange={handleChange}
                   />
-                  <button className="profile-btn-edit" onClick={handleSave}>{t("save")}</button>
-                  <button className="profile-btn-cancel" onClick={() => setEditMode(false)}>{t("cancel")}</button>
+                  <button
+                    className="profile-btn-edit"
+                    onClick={handleSave}
+                    disabled={isSavingUser}
+                  >
+                    {isSavingUser ? (
+                      <><span className="button-spinner"></span> {t("saving")}</>
+                    ) : (
+                      t("saveChanges")
+                    )}
+                  </button>
+                  <button
+                    className="profile-btn-cancel"
+                    onClick={() => setEditMode(false)}
+                    disabled={isSavingUser}
+                  >
+                    {t("cancel")}
+                  </button>
                 </>
               ) : (
                 <>
                   <p><strong>{t("name")}:</strong> {user.fullname}</p>
                   <p><strong>{t("email")}:</strong> {user.email}</p>
                   <p><strong>{t("role")}:</strong> {user.role}</p>
-                  <button className="profile-btn-edit" onClick={handleEditClick}>{t("editProfile")}</button>
+                  <button
+                    className="edit-profile-btn"
+                    onClick={handleEditClick}
+                    disabled={isSavingUser}
+                  >
+                    <FaEdit /> {t("editProfile")}
+                  </button>
                 </>
               )}
             </div>
@@ -783,15 +868,37 @@ const UserProfile = () => {
                     placeholder={t("newPassword")}
                     onChange={handleChange}
                   />
-                  <button className="profile-btn-edit" onClick={handleSave}>{t("save")}</button>
-                  <button className="profile-btn-cancel" onClick={() => setEditMode(false)}>{t("cancel")}</button>
+                  <button
+                    className="profile-btn-edit"
+                    onClick={handleSave}
+                    disabled={isSavingUser}
+                  >
+                    {isSavingUser ? (
+                      <><span className="button-spinner"></span> {t("saving")}</>
+                    ) : (
+                      t("saveChanges")
+                    )}
+                  </button>
+                  <button
+                    className="profile-btn-cancel"
+                    onClick={() => setEditMode(false)}
+                    disabled={isSavingUser}
+                  >
+                    {t("cancel")}
+                  </button>
                 </>
               ) : (
                 <>
                   <p><strong>{t("name")}:</strong> {user.fullname}</p>
                   <p><strong>{t("email")}:</strong> {user.email}</p>
                   <p><strong>{t("role")}:</strong> {user.role}</p>
-                  <button className="profile-btn-edit" onClick={handleEditClick}>{t("editProfile")}</button>
+                  <button
+                    className="edit-profile-btn"
+                    onClick={handleEditClick}
+                    disabled={isSavingUser}
+                  >
+                    <FaEdit /> {t("editProfile")}
+                  </button>
                 </>
               )}
             </div>
@@ -802,8 +909,8 @@ const UserProfile = () => {
 
       {/* Profile Picture Upload Modal */}
       {showImgModal && (
-        <div className="profile-img-modal">
-          <div className="profile-img-modal-content">
+        <div className="profile-img-modal-overlay" data-theme={theme}>
+          <div className="profile-img-modal">
             <h3>{t("updateProfilePicture")}</h3>
 
             <img
@@ -831,21 +938,25 @@ const UserProfile = () => {
               {t("chooseImage")}
             </button>
 
-            <div className="profile-img-modal-actions">
-              <button
-                className="profile-img-save-btn"
-                onClick={handleSaveProfilePicture}
-                disabled={!profilePicture}
-              >
-                {t("save")}
-              </button>
-              <button
-                className="profile-img-cancel-btn"
-                onClick={handleCancelProfilePicture}
-              >
-                {t("cancel")}
-              </button>
-            </div>
+            <button
+              className="save-img-btn"
+              onClick={handleSaveProfilePicture}
+              disabled={isUploadingProfilePicture || !profilePicture}
+            >
+              {isUploadingProfilePicture ? (
+                <><span className="button-spinner"></span> {t("uploading")}</>
+              ) : (
+                t("saveImage")
+              )}
+            </button>
+
+            <button
+              className="cancel-img-btn"
+              onClick={handleCancelProfilePicture}
+              disabled={isUploadingProfilePicture}
+            >
+              {t("cancel")}
+            </button>
           </div>
         </div>
       )}
@@ -879,6 +990,15 @@ const UserProfile = () => {
         onConfirm={confirmDeleteUser}
         userName={allUsers.find(user => user._id === userToDelete)?.fullname || ''}
       />
+
+      <button
+        className="refresh-data-btn"
+        onClick={refreshData}
+        disabled={isRefreshing}
+        title={t("refreshData")}
+      >
+        <i className={`fas fa-sync-alt ${isRefreshing ? 'fa-spin' : ''}`}></i> {t("refresh")}
+      </button>
     </div>
   );
 };

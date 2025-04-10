@@ -30,7 +30,7 @@ const formatDate = (dateString) => {
   return `${day}-${month}-${year}`;
 };
 
-const TaskCards = ({ task }) => {
+const TaskCards = ({ task, isMoving = false }) => {
   const { theme } = useContext(ThemeContext);
   const [{ isDragging }, drag] = useDrag(() => ({
     type: ITEM_TYPE,
@@ -38,18 +38,24 @@ const TaskCards = ({ task }) => {
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
+    canDrag: !isMoving, // Prevent dragging while task is being moved
   }));
 
   return (
     <div
       ref={drag}
-      className="task-cards"
+      className={`task-cards ${isMoving ? 'loading' : ''}`}
       data-theme={theme}
       style={{
         opacity: isDragging ? 0.5 : 1,
-        cursor: isDragging ? "grabbing" : "grab"
+        cursor: isMoving ? "wait" : (isDragging ? "grabbing" : "grab")
       }}
     >
+      {isMoving && (
+        <div className="task-loading-overlay">
+          <div className="task-loading-spinner"></div>
+        </div>
+      )}
       <h3>{task.title}</h3>
       <p>
         <strong>Status:</strong>{" "}

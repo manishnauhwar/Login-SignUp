@@ -11,7 +11,7 @@ const SortTasks = ({ tasks = [], setTasks, fullData, setFullData }) => {
   const { theme } = useContext(ThemeContext);
   const { translate } = useContext(LanguageContext);
 
-  const priorityOrder = { "high": 1, "medium": 2, "low": 3 };
+  const priorityOrder = { "High": 1, "Medium": 2, "Low": 3 };
 
   const handleFilter = (e) => {
     const value = e.target.value;
@@ -22,14 +22,14 @@ const SortTasks = ({ tasks = [], setTasks, fullData, setFullData }) => {
         : fullData.filter((task) => {
           switch (value) {
             case "completed":
-              return task.status === "completed";
+              return task.status === "Completed";
             case "pending":
-              return task.status === "inProgress" || task.status === "toDo";
+              return task.status === "In progress" || task.status === "To Do";
             case "overdue":
-              return task.dueDate && new Date(task.dueDate) > new Date();
-            case "high":
-            case "medium":
-            case "low":
+              return task.dueDate && new Date(task.dueDate) < new Date() && task.status !== "Completed";
+            case "High":
+            case "Medium":
+            case "Low":
               return task.priority === value;
             default:
               return true;
@@ -61,9 +61,9 @@ const SortTasks = ({ tasks = [], setTasks, fullData, setFullData }) => {
         <option value="completed">{translate("completedTasksFilter")}</option>
         <option value="pending">{translate("pendingTasksFilter")}</option>
         <option value="overdue">{translate("overdueTasksFilter")}</option>
-        <option value="high">{translate("highPriority")}</option>
-        <option value="medium">{translate("mediumPriority")}</option>
-        <option value="low">{translate("lowPriority")}</option>
+        <option value="High">{translate("highPriority")}</option>
+        <option value="Medium">{translate("mediumPriority")}</option>
+        <option value="Low">{translate("lowPriority")}</option>
       </select>
       <select className="sort-select" onChange={(e) => setSortType(e.target.value)}>
         <option value="">{translate("sortBy")}</option>
