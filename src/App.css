@@ -499,7 +499,6 @@ p {
   text-align: center;
 }
 
-/* Delete Confirmation Modal Styles */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -565,4 +564,30 @@ p {
 
 .btn-delete:hover {
   background-color: #d32f2f;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px white inset !important;
+  -webkit-text-fill-color: #333 !important;
+  font-size: 1rem !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+.btn-enabled {
+  background-color: #004d3a !important;
+  cursor: pointer !important;
+  opacity: 1 !important;
+}
+
+.btn-disabled {
+  background-color: #cccccc !important;
+  cursor: not-allowed !important;
+}
+
+.btn-primary:disabled.btn-enabled {
+  background-color: #004d3a !important;
+  cursor: pointer !important;
 }

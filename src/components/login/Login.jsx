@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import img from "../../assets/img.webp";
 import GoogleAuth from "../login/GoogleAuth";
@@ -13,6 +13,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [authError, setAuthError] = useState("");
   const [formValid, setFormValid] = useState(false);
+  const formRef = useRef(null);
 
   const [formState, setFormState] = useState({
     email: "",
@@ -24,31 +25,40 @@ const Login = () => {
   });
 
   useEffect(() => {
-    const checkForAutofill = () => {
-      const emailInput = document.querySelector('input[name="email"]');
-      const passwordInput = document.querySelector('input[name="password"]');
-
-      if (emailInput && passwordInput) {
-        if (emailInput.value && passwordInput.value) {
-          setFormState(prev => ({
-            ...prev,
-            email: emailInput.value,
-            password: passwordInput.value
-          }));
-          setFormValid(true);
-        }
-      }
-    };
-
     checkForAutofill();
-    const timeoutId = setTimeout(checkForAutofill, 500);
 
-    return () => clearTimeout(timeoutId);
+    const timeoutIds = [
+      setTimeout(checkForAutofill, 100),
+      setTimeout(checkForAutofill, 500),
+      setTimeout(checkForAutofill, 1000)
+    ];
+
+    return () => timeoutIds.forEach(id => clearTimeout(id));
   }, []);
 
+  const checkForAutofill = () => {
+    const emailInput = document.querySelector('input[name="email"]');
+    const passwordInput = document.querySelector('input[name="password"]');
+
+    if (emailInput && passwordInput) {
+      if (emailInput.value && passwordInput.value) {
+        setFormState(prev => ({
+          ...prev,
+          email: emailInput.value,
+          password: passwordInput.value
+        }));
+
+        setFormValid(true);
+      }
+    }
+  };
+
+  const handleFormInteraction = () => {
+    checkForAutofill();
+  };
+
   useEffect(() => {
-    const isValid = formState.email.trim() !== "" && formState.password.trim() !== "";
-    setFormValid(isValid);
+    setFormValid(formState.email.trim() !== "" && formState.password.trim() !== "");
   }, [formState.email, formState.password]);
 
   const validateEmail = (email) => {
@@ -78,6 +88,7 @@ const Login = () => {
     if (authError) {
       setAuthError("");
     }
+    checkForAutofill();
   };
 
   const handleLogin = async (e) => {
@@ -121,7 +132,11 @@ const Login = () => {
   };
 
   return (
-    <div className="login-container">
+    <div
+      className="login-container"
+      onMouseOver={handleFormInteraction}
+      onClick={handleFormInteraction}
+    >
       <div className="login-left">
         <img src={img} alt="Background" className="login-img" />
         <div className="overlay-text">
@@ -139,7 +154,7 @@ const Login = () => {
           </Link>
         </p>
 
-        <form onSubmit={handleLogin}>
+        <form onSubmit={handleLogin} ref={formRef}>
           <input
             type="email"
             name="email"
@@ -165,7 +180,7 @@ const Login = () => {
 
           <button
             type="submit"
-            className="btn-primary"
+            className={`btn-primary ${formValid ? 'btn-enabled' : 'btn-disabled'}`}
             disabled={!formValid || isLoading}
           >
             {isLoading ? t("loggingIn") : t("login")}
