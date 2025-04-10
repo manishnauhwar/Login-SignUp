@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import img from "../../assets/img.webp";
 import GoogleAuth from "../login/GoogleAuth";
@@ -12,75 +12,51 @@ const Login = () => {
   const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [authError, setAuthError] = useState("");
-  const [formValid, setFormValid] = useState(false);
-  const formRef = useRef(null);
+  const [validationErrors, setValidationErrors] = useState({
+    email: "",
+    password: ""
+  });
 
   const [formState, setFormState] = useState({
     email: "",
     password: "",
-    errors: {
-      email: "",
-      password: "",
-    },
   });
 
-  useEffect(() => {
-    checkForAutofill();
-
-    const timeoutIds = [
-      setTimeout(checkForAutofill, 100),
-      setTimeout(checkForAutofill, 500),
-      setTimeout(checkForAutofill, 1000)
-    ];
-
-    return () => timeoutIds.forEach(id => clearTimeout(id));
-  }, []);
-
-  const checkForAutofill = () => {
-    const emailInput = document.querySelector('input[name="email"]');
-    const passwordInput = document.querySelector('input[name="password"]');
-
-    if (emailInput && passwordInput) {
-      if (emailInput.value && passwordInput.value) {
-        setFormState(prev => ({
-          ...prev,
-          email: emailInput.value,
-          password: passwordInput.value
-        }));
-
-        setFormValid(true);
-      }
-    }
-  };
-
-  const handleFormInteraction = () => {
-    checkForAutofill();
-  };
-
-  useEffect(() => {
-    setFormValid(formState.email.trim() !== "" && formState.password.trim() !== "");
-  }, [formState.email, formState.password]);
-
   const validateEmail = (email) => {
+    if (!email.trim()) {
+      return { valid: false, error: "Email is required" };
+    }
     const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    return emailPattern.test(email);
+    return {
+      valid: emailPattern.test(email),
+      error: emailPattern.test(email) ? "" : "Please enter a valid email address"
+    };
   };
 
   const validatePassword = (password) => {
-    return password.length >= 6;
+    if (!password.trim()) {
+      return { valid: false, error: "Password is required" };
+    }
+    return {
+      valid: password.length >= 6,
+      error: password.length >= 6 ? "" : "Password must be at least 6 characters long"
+    };
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+
     if (authError) setAuthError("");
+    if (validationErrors[name]) {
+      setValidationErrors(prev => ({
+        ...prev,
+        [name]: ""
+      }));
+    }
 
     setFormState(prev => ({
       ...prev,
-      [name]: value,
-      errors: {
-        ...prev.errors,
-        [name]: ""
-      }
+      [name]: value
     }));
   };
 
@@ -88,22 +64,25 @@ const Login = () => {
     if (authError) {
       setAuthError("");
     }
-    checkForAutofill();
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
-    setAuthError("");
 
-    const emailValid = validateEmail(formState.email);
-    const passwordValid = validatePassword(formState.password);
+    const emailValidation = validateEmail(formState.email);
+    const passwordValidation = validatePassword(formState.password);
 
-    if (!emailValid || !passwordValid) {
-      setIsLoading(false);
-      setAuthError(t("invalidCredentials"));
+    setValidationErrors({
+      email: emailValidation.error,
+      password: passwordValidation.error
+    });
+
+    if (!emailValidation.valid || !passwordValidation.valid) {
       return;
     }
+
+    setIsLoading(true);
+    setAuthError("");
 
     try {
       const response = await axiosInstance.post("/users/login", {
@@ -132,11 +111,7 @@ const Login = () => {
   };
 
   return (
-    <div
-      className="login-container"
-      onMouseOver={handleFormInteraction}
-      onClick={handleFormInteraction}
-    >
+    <div className="login-container">
       <div className="login-left">
         <img src={img} alt="Background" className="login-img" />
         <div className="overlay-text">
@@ -154,34 +129,41 @@ const Login = () => {
           </Link>
         </p>
 
-        <form onSubmit={handleLogin} ref={formRef}>
-          <input
-            type="email"
-            name="email"
-            placeholder={t("email")}
-            value={formState.email}
-            onChange={handleInputChange}
-            onFocus={handleInputFocus}
-            className="input"
-          />
+        <form onSubmit={handleLogin}>
+          <div className="form-group">
+            <input
+              type="email"
+              name="email"
+              placeholder={t("email")}
+              value={formState.email}
+              onChange={handleInputChange}
+              onFocus={handleInputFocus}
+              className={`input ${validationErrors.email ? "input-error" : ""}`}
+            />
+            {validationErrors.email && <p className="error-text">{validationErrors.email}</p>}
+          </div>
 
-          <input
-            type="password"
-            name="password"
-            placeholder={t("password")}
-            value={formState.password}
-            onChange={handleInputChange}
-            onFocus={handleInputFocus}
-            className={`input ${authError ? "input-error" : ""}`}
-          />
-          {authError && <p className="error-text">{authError}</p>}
+          <div className="form-group">
+            <input
+              type="password"
+              name="password"
+              placeholder={t("password")}
+              value={formState.password}
+              onChange={handleInputChange}
+              onFocus={handleInputFocus}
+              className={`input ${validationErrors.password ? "input-error" : ""}`}
+            />
+            {validationErrors.password && <p className="error-text">{validationErrors.password}</p>}
+          </div>
+
+          {authError && <p className="auth-error">{authError}</p>}
 
           <Link to="/forgot-password" className="forgot-password">{t("forgotPassword")}</Link>
 
           <button
             type="submit"
-            className={`btn-primary ${formValid ? 'btn-enabled' : 'btn-disabled'}`}
-            disabled={!formValid || isLoading}
+            className="btn-primary"
+            disabled={isLoading}
           >
             {isLoading ? t("loggingIn") : t("login")}
           </button>

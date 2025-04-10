@@ -591,3 +591,41 @@ input:-webkit-autofill:active {
   background-color: #004d3a !important;
   cursor: pointer !important;
 }
+
+
+.form-group {
+  margin-bottom: 15px;
+  position: relative;
+  width: 100%;
+}
+
+.error-text {
+  color: #e74c3c;
+  font-size: 12px;
+  margin-top: 4px;
+  margin-bottom: 0;
+  display: block;
+}
+
+.input-error {
+  border-color: #e74c3c !important;
+  background-color: rgba(231, 76, 60, 0.05);
+}
+
+.input-error:focus {
+  box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.2);
+  outline: none;
+}
+
+.auth-error {
+  color: #e74c3c;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 10px 0;
+  padding: 8px;
+  background-color: rgba(231, 76, 60, 0.1);
+  border-radius: 4px;
+  text-align: center;
+  display: block;
+  border-left: 3px solid #e74c3c;
+}
